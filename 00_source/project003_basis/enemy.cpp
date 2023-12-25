@@ -530,6 +530,9 @@ void CEnemy::UpdateKnock(void)
 
 		// マテリアル再設定
 		ResetMaterial();
+
+		// サウンドの再生
+		GET_MANAGER->GetSound()->Play(CSound::LABEL_SE_FALL);	// 生成音
 	}
 
 	// 位置を反映
@@ -733,6 +736,9 @@ void CEnemy::UpdateAction(void)
 
 		// 死亡状態にする
 		m_state = STATE_DEATH;
+
+		// サウンドの再生
+		GET_MANAGER->GetSound()->Play(CSound::LABEL_SE_FALL);	// 生成音
 	}
 
 	// 位置を反映
