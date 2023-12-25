@@ -19,6 +19,7 @@
 #include "fade.h"
 #include "stage.h"
 #include "bullet.h"
+#include "enemy.h"
 
 //************************************************************
 //	定数宣言
@@ -36,8 +37,9 @@ namespace
 	const float	ADD_MOVE	= 0.08f;	// 非アクション時の速度加算量
 	const float	JUMP_REV	= 0.16f;	// 空中の移動量の減衰係数
 	const float	LAND_REV	= 0.16f;	// 地上の移動量の減衰係数
-	const float	KNOCK_REV	= 0.9f;		// 吹っ飛び状態時の移動量の減衰係数
-
+	const float	KNOCK_REV	= 0.08f;	// 吹っ飛び状態時の移動量の減衰係数
+	const float	KNOCK_UP	= 15.0f;	// ノック上昇量
+	const float	KNOCK_SIDE	= 35.0f;	// ノック横移動量
 	const float	SPAWN_ADD_ALPHA	= 0.03f;	// スポーン状態時の透明度の加算量
 	const float	DEATH_SUB_ALPHA	= 0.05f;	// 死亡時の透明度の減算量
 }
@@ -178,33 +180,43 @@ void CPlayer::Draw(void)
 //============================================================
 void CPlayer::HitKnockBack(const int nDmg, const D3DXVECTOR3 &vecKnock)
 {
+	if (IsDeath())
+	{ // 死亡フラグが立っている場合
+
+		return;
+	}
+
+	if (m_state != STATE_NORMAL)
+	{ // 通常状態ではない場合
+
+		return;
+	}
+
 	// 変数を宣言
 	D3DXVECTOR3 posPlayer = GetVec3Position();	// プレイヤー位置
 	D3DXVECTOR3 rotPlayer = GetVec3Rotation();	// プレイヤー向き
 
-#if 0
+	// カウンターを初期化
+	m_nCounterState = 0;
 
-	if (IsDeath() != true)
-	{ // 死亡フラグが立っていない場合
+	// ノックバック移動量を設定
+	m_move.x = KNOCK_SIDE * vecKnock.x;
+	m_move.y = KNOCK_UP;
+	m_move.z = KNOCK_SIDE * vecKnock.z;
 
-		if (m_state == STATE_NORMAL)
-		{ // 通常状態の場合
+	// ノックバック方向に向きを設定
+	rotPlayer.y = atan2f(vecKnock.x, vecKnock.z);	// 吹っ飛び向きを計算
+	m_destRot.y = rotPlayer.y;	// 目標向きを設定
+	SetVec3Rotation(rotPlayer);	// 向きを設定
 
-			// カウンターを初期化
-			m_nCounterState = 0;
+	// 空中状態にする
+	m_bJump = true;
 
-			// 待機モーションを設定
-			SetMotion(MOTION_IDOL);
+	// ノック状態を設定
+	SetState(STATE_KNOCK);
 
-			// 爆発パーティクルを生成
-			CParticle3D::Create(CParticle3D::TYPE_SMALL_EXPLOSION, D3DXVECTOR3(posPlayer.x, posPlayer.y + basic::HEIGHT * 0.5f, posPlayer.z));
-
-			// サウンドの再生
-			GET_MANAGER->GetSound()->Play(CSound::LABEL_SE_HIT);	// ヒット音
-		}
-	}
-
-#endif
+	// サウンドの再生
+	CManager::GetInstance()->GetSound()->Play(CSound::LABEL_SE_HIT);	// ヒット音
 }
 
 //============================================================
@@ -418,6 +430,9 @@ void CPlayer::UpdateNormal(void)
 	// 着地判定
 	UpdateLanding(posPlayer);
 
+	// 敵との当たり判定
+	CollisionEnemy(posPlayer);
+
 	// 向き更新
 	UpdateRotation(rotPlayer);
 
@@ -444,7 +459,44 @@ void CPlayer::UpdateNormal(void)
 //============================================================
 void CPlayer::UpdateKnock(void)
 {
+	// 変数を宣言
+	D3DXVECTOR3 posPlayer = GetVec3Position();	// プレイヤー位置
+	D3DXVECTOR3 rotPlayer = GetVec3Rotation();	// プレイヤー向き
 
+	// ポインタを宣言
+	CStage *pStage = CScene::GetStage();	// ステージ情報
+	assert(pStage != nullptr);
+
+	// 重力の更新
+	UpdateGravity();
+
+	// 着地判定
+	if (UpdateLanding(posPlayer))
+	{ // 着地した場合
+
+		// 通常状態にする
+		m_state = STATE_NORMAL;
+	}
+
+	// 向き更新
+	UpdateRotation(rotPlayer);
+
+	// ステージ範囲外の補正
+	pStage->LimitPosition(posPlayer, RADIUS);
+
+	// キルYとの判定
+	if (pStage->CollisionKillY(posPlayer))
+	{ // キルYより下の位置にいる場合
+
+		// 死亡状態にする
+		m_state = STATE_DEATH;
+	}
+
+	// 位置を反映
+	SetVec3Position(posPlayer);
+
+	// 向きを反映
+	SetVec3Rotation(rotPlayer);
 }
 
 //============================================================
@@ -948,4 +1000,81 @@ bool CPlayer::CollisionGround(D3DXVECTOR3& rPos)
 
 	// 着地状況を返す
 	return bLand;
+}
+
+//============================================================
+//	敵との当たり判定
+//============================================================
+void CPlayer::CollisionEnemy(D3DXVECTOR3 &rPos)
+{
+	for (int nCntPri = 0; nCntPri < object::MAX_PRIO; nCntPri++)
+	{ // 優先順位の総数分繰り返す
+
+		// ポインタを宣言
+		CObject *pObjectTop = CObject::GetTop(nCntPri);	// 先頭オブジェクト
+
+		if (pObjectTop != NULL)
+		{ // 先頭が存在する場合
+
+			// ポインタを宣言
+			CObject *pObjCheck = pObjectTop;	// オブジェクト確認用
+
+			while (pObjCheck != NULL)
+			{ // オブジェクトが使用されている場合繰り返す
+
+				// 変数を宣言
+				D3DXVECTOR3 posEnemy = VEC3_ZERO;	// 敵位置
+
+				// ポインタを宣言
+				CObject *pObjectNext = pObjCheck->GetNext();	// 次オブジェクト
+
+				if (pObjCheck->GetLabel() != CObject::LABEL_ENEMY)
+				{ // オブジェクトラベルが地盤ではない場合
+
+					// 次のオブジェクトへのポインタを代入
+					pObjCheck = pObjectNext;
+
+					// 次の繰り返しに移行
+					continue;
+				}
+
+				if (pObjCheck->GetState() != CEnemy::STATE_NORMAL)
+				{ // 状態が通常ではない場合
+
+					// 次のオブジェクトへのポインタを代入
+					pObjCheck = pObjectNext;
+
+					// 次の繰り返しに移行
+					continue;
+				}
+
+				// 地盤の位置を設定
+				posEnemy = pObjCheck->GetVec3Position();
+
+				// 円柱の衝突判定
+				bool bHit = collision::CirclePillar
+				( // 引数
+					rPos,					// 判定位置
+					posEnemy,				// 判定目標位置
+					RADIUS,					// 判定半径
+					pObjCheck->GetRadius()	// 判定目標半径
+				);
+				if (bHit)
+				{ // 当たっていた場合
+
+					D3DXVECTOR3 vecKnock = rPos - posEnemy;		// ノックバックベクトル
+					D3DXVec3Normalize(&vecKnock, &vecKnock);	// 正規化
+
+					// プレイヤーのヒット処理
+					HitKnockBack(0, vecKnock);
+
+					// 関数を抜ける
+					return;
+				}
+
+				// 次のオブジェクトへのポインタを代入
+				pObjCheck = pObjectNext;
+			}
+		}
+	}
 }

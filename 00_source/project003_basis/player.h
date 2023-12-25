@@ -97,6 +97,7 @@ private:
 
 	bool ResponseSingleGround(const EAxis axis, D3DXVECTOR3 &rPos);	// 地盤との一軸ごとの当たり判定
 	bool CollisionGround(D3DXVECTOR3 &rPos);	// 地盤との当たり判定
+	void CollisionEnemy(D3DXVECTOR3 &rPos);		// 敵との当たり判定
 
 	// 静的メンバ変数
 	static const char *mc_apModelFile[];	// モデル定数

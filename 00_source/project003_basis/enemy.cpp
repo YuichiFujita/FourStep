@@ -10,6 +10,7 @@
 #include "enemy.h"
 #include "manager.h"
 #include "renderer.h"
+#include "sound.h"
 #include "enemyNormal.h"
 #include "scene.h"
 #include "stage.h"
@@ -27,7 +28,9 @@ namespace
 	const float	GRAVITY		= 1.0f;		// 重力
 	const float	JUMP_REV	= 0.16f;	// 空中の移動量の減衰係数
 	const float	LAND_REV	= 0.16f;	// 地上の移動量の減衰係数
-	const float	KNOCK_REV	= 0.9f;		// 吹っ飛び状態時の移動量の減衰係数
+	const float	KNOCK_REV	= 0.45f;	// 吹っ飛び状態時の移動量の減衰係数
+	const float	KNOCK_UP	= 15.0f;	// ノック上昇量
+	const float	KNOCK_SIDE	= 35.0f;	// ノック横移動量
 
 	const float	SPAWN_ADD_ALPHA = 0.0075f;	// スポーン時の透明度の加算量
 	const float	DEATH_SUB_ALPHA = 0.05f;	// 死亡時の透明度の減算量
@@ -155,55 +158,44 @@ void CEnemy::Draw(void)
 //============================================================
 //	ノックバックヒット処理
 //============================================================
-void CEnemy::HitKnockBack(const int nDmg, const D3DXVECTOR3& vec)
+void CEnemy::HitKnockBack(const int nDmg, const D3DXVECTOR3&vecKnock)
 {
-#if 0
-	// 変数を宣言
-	D3DXVECTOR3 pos = GetVec3Position();	// 敵位置
-	D3DXVECTOR3 vecKnock = vec;				// ノックバックベクトル
+	if (IsDeath())
+	{ // 死亡フラグが立っている場合
 
-	if (IsDeath() != true && m_state == STATE_NORMAL)
-	{ // 死亡フラグが立っていない且つ、通常状態の場合
-
-		// レベルを加算
-		m_pBubble->AddLevel(nDmg);
-
-		if (m_pBubble->GetLevel() < m_status.nLife)
-		{ // 生きている場合
-
-			// ノックバック移動量を設定
-			vecKnock.y = 0.0f;									// 縦ベクトルを初期化
-			D3DXVec3Normalize(&vecKnock, &vecKnock);			// ベクトルを正規化
-			m_moveKnock = vecKnock * m_status.fKnockBackSide;	// ノックバック横移動量を計算
-			m_moveKnock.y = m_status.fKnockBackUp;				// ノックバック縦移動量を代入
-
-			// カウンターを初期化
-			m_nCounterState = 0;
-			m_nCounterBubble = 0;
-
-			// 状態を設定
-			m_state = STATE_DAMAGE;	// ダメージ状態
-		}
-		else
-		{ // 死んでいる場合
-
-			// モーションを更新しない状態にする
-			SetEnableMotionUpdate(false);
-
-			// 方向表示を削除
-			m_pWay->Delete();
-
-			// 状態を設定
-			m_state = STATE_DEATH;	// 死亡状態
-
-			// サウンドの再生
-			CManager::GetSound()->Play(CSound::LABEL_SE_FLY);	// 浮遊音
-		}
-
-		// パーティクル3Dオブジェクトを生成
-		CParticle3D::Create(CParticle3D::TYPE_BUBBLE_EXPLOSION, pos);
+		return;
 	}
-#endif
+
+	if (m_state != STATE_NORMAL)
+	{ // 通常状態ではない場合
+
+		return;
+	}
+
+	// 変数を宣言
+	D3DXVECTOR3 posPlayer = GetVec3Position();	// プレイヤー位置
+	D3DXVECTOR3 rotPlayer = GetVec3Rotation();	// プレイヤー向き
+
+	// カウンターを初期化
+	m_nCounterState = 0;
+
+	// ノックバック移動量を設定
+	m_movePos.x = KNOCK_SIDE * vecKnock.x;
+	m_movePos.y = KNOCK_UP;
+	m_movePos.z = KNOCK_SIDE * vecKnock.z;
+
+	// ノックバック方向に向きを設定
+	rotPlayer.y = atan2f(vecKnock.x, vecKnock.z);	// 吹っ飛び向きを計算
+	SetVec3Rotation(rotPlayer);	// 向きを設定
+
+	// 空中状態にする
+	m_bJump = true;
+
+	// ノック状態を設定
+	SetState(STATE_KNOCK);
+
+	// サウンドの再生
+	CManager::GetInstance()->GetSound()->Play(CSound::LABEL_SE_HIT);	// ヒット音
 }
 
 //============================================================
@@ -458,6 +450,9 @@ CEnemy::SStatusInfo CEnemy::GetStatusInfo(void) const
 //============================================================
 void CEnemy::UpdateSpawn(void)
 {
+	// マテリアル再設定
+	ResetMaterial();
+
 	// フェードアウトの更新
 	if (UpdateFadeOut(SPAWN_ADD_ALPHA))
 	{ // 不透明になった場合
@@ -472,27 +467,40 @@ void CEnemy::UpdateSpawn(void)
 //============================================================
 void CEnemy::UpdateKnock(void)
 {
-	if (m_nCounterState < DAMAGE_FRAME)
-	{ // カウンターが一定値より小さい場合
+	// 変数を宣言
+	D3DXVECTOR3 posEnemy = GetVec3Position();	// プレイヤー位置
 
-		// カウンターを加算
-		m_nCounterState++;
+	// ポインタを宣言
+	CStage *pStage = CScene::GetStage();	// ステージ情報
+	assert(pStage != nullptr);
 
-		// マテリアルを全設定
-		SetAllMaterial(material::Red());	// 赤
-	}
-	else
-	{ // カウンターが一定値以上の場合
+	// マテリアルを全設定
+	SetAllMaterial(material::Red());	// 赤
 
-		// カウンターを初期化
-		m_nCounterState = 0;
+	// 重力を与える
+	m_movePos.y -= GRAVITY;
 
-		// マテリアル再設定
-		ResetMaterial();
+	// 着地判定
+	if (UpdateLanding(&posEnemy))
+	{ // 着地した場合
 
 		// 通常状態にする
 		m_state = STATE_NORMAL;
 	}
+
+	// ステージ範囲外の補正
+	pStage->LimitPosition(posEnemy, m_status.fRadius);
+
+	// キルYとの判定
+	if (pStage->CollisionKillY(posEnemy))
+	{ // キルYより下の位置にいる場合
+
+		// 死亡状態にする
+		m_state = STATE_DEATH;
+	}
+
+	// 位置を反映
+	SetVec3Position(posEnemy);
 }
 
 //============================================================
@@ -502,6 +510,9 @@ bool CEnemy::UpdateDeath(void)
 {
 	// 変数を宣言
 	D3DXVECTOR3 posEnemy = GetVec3Position();	// 敵位置
+
+	// マテリアル再設定
+	ResetMaterial();
 
 	// 過去位置の更新
 	UpdateOldPosition();
@@ -549,6 +560,9 @@ void CEnemy::UpdateAction(void)
 	D3DXVECTOR3 posLook = pPlayer->GetVec3Position();	// プレイヤー位置
 	float fPlayerRadius = pPlayer->GetRadius();			// プレイヤー半径
 
+	// マテリアル再設定
+	ResetMaterial();
+
 	// 過去位置の更新
 	UpdateOldPosition();
 
@@ -574,6 +588,9 @@ void CEnemy::UpdateAction(void)
 
 	// 着地状況の更新
 	UpdateLanding(&posEnemy);
+
+	// ステージ範囲外の補正
+	pStage->LimitPosition(posEnemy, m_status.fRadius);
 
 	// キルYとの判定
 	if (pStage->CollisionKillY(posEnemy))
