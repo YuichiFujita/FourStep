@@ -28,8 +28,8 @@
 #define INITCOL_FADE	(XCOL_AWHITE)	// α値の初期値
 #define ADD_ALPHA		(0.008f)		// α値の加算量
 
-#define POS_RESULT_MISSION	(D3DXVECTOR3(440.0f, 150.0f, 0.0f))	// リザルト表示の遅刻回避の位置
-#define POS_RESULT_RESULT	(D3DXVECTOR3(840.0f, 150.0f, 0.0f))	// リザルト表示の成功失敗の位置
+#define POS_RESULT_MISSION	(D3DXVECTOR3(440.0f, SCREEN_CENT.y, 0.0f))	// リザルト表示の遅刻回避の位置
+#define POS_RESULT_RESULT	(D3DXVECTOR3(840.0f, SCREEN_CENT.y, 0.0f))	// リザルト表示の成功失敗の位置
 #define SIZE_RESULT			(D3DXVECTOR3(1280.0f, 260.0f, 0.0f)*0.5f)	// リザルト表示の大きさ
 #define SIZE_VALUE			(D3DXVECTOR3(120.0f, 140.0f, 0.0f))
 #define SPACE_VALUE			(D3DXVECTOR3(100.0f, 0.0f, 0.0f))
@@ -65,9 +65,6 @@
 const char *CResultManager::mc_apTextureFile[] =	// テクスチャ定数
 {
 	"data\\TEXTURE\\result000.png",		// 遅刻回避テクスチャ
-	"data\\TEXTURE\\continue000.png",	// コンテニュー表示テクスチャ
-	"data\\TEXTURE\\continue001.png",	// YESテクスチャ
-	"data\\TEXTURE\\continue002.png",	// NOテクスチャ
 };
 
 //************************************************************
@@ -79,15 +76,11 @@ const char *CResultManager::mc_apTextureFile[] =	// テクスチャ定数
 CResultManager::CResultManager()
 {
 	// メンバ変数をクリア
-	memset(&m_apContinue[0], 0, sizeof(m_apContinue));	// コンテニュー表示の情報
 	m_pScoreTitle	= nullptr;		// スコアタイトルの情報
 	m_pScore		= nullptr;		// スコアの情報
-	m_pContLogo		= nullptr;		// コンテニューロゴの情報
 	m_pFade			= nullptr;		// フェードの情報
 	m_state			= STATE_NONE;	// 状態
 	m_nCounterState	= 0;			// 状態管理カウンター
-	m_nSelect		= SELECT_YES;	// 現在の選択
-	m_nOldSelect	= SELECT_YES;	// 前回の選択
 	m_fScale		= 0.0f;			// ポリゴン拡大率
 }
 
@@ -115,15 +108,11 @@ HRESULT CResultManager::Init(void)
 	CTexture *pTexture = GET_MANAGER->GetTexture();	// テクスチャへのポインタ
 
 	// メンバ変数を初期化
-	memset(&m_apContinue[0], 0, sizeof(m_apContinue));	// コンテニュー表示の情報
 	m_pScoreTitle	= nullptr;		// スコアタイトルの情報
 	m_pScore		= nullptr;		// スコアの情報
-	m_pContLogo		= nullptr;		// コンテニューロゴの情報
 	m_pFade			= nullptr;		// フェードの情報
 	m_state			= STATE_FADEIN;	// 状態
 	m_nCounterState	= 0;			// 状態管理カウンター
-	m_nSelect		= SELECT_YES;	// 現在の選択
-	m_nOldSelect	= SELECT_YES;	// 前回の選択
 	m_fScale		= 0.0f;			// ポリゴン拡大率
 
 	//--------------------------------------------------------
@@ -198,66 +187,6 @@ HRESULT CResultManager::Init(void)
 	// 描画をしない設定にする
 	m_pScore->SetEnableDraw(false);
 
-	//--------------------------------------------------------
-	//	コンテニューロゴ表示の生成・設定
-	//--------------------------------------------------------
-	// コンテニューロゴ表示の生成
-	m_pContLogo = CObject2D::Create
-	( // 引数
-		POS_CONT_LOGO,					// 位置
-		SIZE_CONT_LOGO * SET_CONT_SCALE	// 大きさ
-	);
-	if (m_pContLogo == nullptr)
-	{ // 生成に失敗した場合
-
-		// 失敗を返す
-		assert(false);
-		return E_FAIL;
-	}
-
-	// テクスチャを登録・割当
-	m_pContLogo->BindTexture(pTexture->Regist(mc_apTextureFile[TEXTURE_CONTINUE]));
-
-	// 優先順位を設定
-	m_pContLogo->SetPriority(RESULT_PRIO);
-
-	// 描画をしない設定にする
-	m_pContLogo->SetEnableDraw(false);
-
-	//--------------------------------------------------------
-	//	コンテニュー表示の生成・設定
-	//--------------------------------------------------------
-	for (int nCntResult = 0; nCntResult < SELECT_MAX; nCntResult++)
-	{ // 選択肢の総数分繰り返す
-
-		// コンテニュー表示の生成
-		m_apContinue[nCntResult] = CObject2D::Create
-		( // 引数
-			aPosContinue[nCntResult],	// 位置
-			SIZE_CONT * SET_CONT_SCALE	// 大きさ
-		);
-		if (m_apContinue[nCntResult] == nullptr)
-		{ // 生成に失敗した場合
-
-			// 失敗を返す
-			assert(false);
-			return E_FAIL;
-		}
-
-		// 優先順位を設定
-		m_apContinue[nCntResult]->SetPriority(RESULT_PRIO);
-
-		// 描画をしない設定にする
-		m_apContinue[nCntResult]->SetEnableDraw(false);
-
-		// 色を設定
-		m_apContinue[nCntResult]->SetColor(DEFAULT_COL);
-	}
-
-	// テクスチャを登録・割当
-	m_apContinue[SELECT_YES]->BindTexture(pTexture->Regist(mc_apTextureFile[TEXTURE_YES]));
-	m_apContinue[SELECT_NO]->BindTexture(pTexture->Regist(mc_apTextureFile[TEXTURE_NO]));
-
 	// 成功を返す
 	return S_OK;
 }
@@ -272,16 +201,6 @@ HRESULT CResultManager::Uninit(void)
 
 	// スコアの終了
 	m_pScore->Uninit();
-
-	for (int nCntResult = 0; nCntResult < SELECT_MAX; nCntResult++)
-	{ // 選択肢の総数分繰り返す
-
-		// コンテニュー表示の終了
-		m_apContinue[nCntResult]->Uninit();
-	}
-
-	// コンテニューロゴ表示の終了
-	m_pContLogo->Uninit();
 
 	// フェードの終了
 	m_pFade->Uninit();
@@ -317,43 +236,7 @@ void CResultManager::Update(void)
 
 		break;
 
-	case STATE_CONTINUE_WAIT:	// コンテニュー表示待機状態
-
-		// 表示待機の更新
-		if (UpdateDrawWait(CONT_WAIT_CNT))
-		{ // 待機完了の場合
-
-			// コンテニュー表示の拡大率を設定
-			m_fScale = SET_CONT_SCALE;
-
-			// コンテニューロゴ表示の描画開始
-			m_pContLogo->SetEnableDraw(true);
-			
-			for (int nCntResult = 0; nCntResult < SELECT_MAX; nCntResult++)
-			{ // 選択肢の総数分繰り返す
-
-				// コンテニュー表示の描画開始
-				m_apContinue[nCntResult]->SetEnableDraw(true);
-			}
-
-			// 状態を変更
-			m_state = STATE_CONTINUE;	// コンテニュー表示状態
-		}
-
-		break;
-
-	case STATE_CONTINUE:	// コンテニュー表示待機状態表示状態
-
-		// コンテニュー表示の更新
-		UpdateContinue();
-
-		break;
-
 	case STATE_WAIT:	// 遷移待機状態
-
-		// 選択の更新
-		UpdateSelect();
-
 		break;
 
 	default:	// 例外処理
@@ -369,16 +252,6 @@ void CResultManager::Update(void)
 
 	// スコアの更新
 	m_pScore->Update();
-
-	for (int nCntResult = 0; nCntResult < SELECT_MAX; nCntResult++)
-	{ // 選択肢の総数分繰り返す
-
-		// コンテニュー表示の更新
-		m_apContinue[nCntResult]->Update();
-	}
-
-	// コンテニューロゴ表示の更新
-	m_pContLogo->Update();
 
 	// フェードの更新
 	m_pFade->Update();
@@ -516,98 +389,11 @@ void CResultManager::UpdateResult(void)
 		m_pScore->SetVec3Sizing(SIZE_VALUE);
 
 		// 状態を変更
-		m_state = STATE_CONTINUE_WAIT;	// コンテニュー表示待機状態
+		m_state = STATE_WAIT;	// コンテニュー表示待機状態
 
 		// サウンドの再生
 		GET_MANAGER->GetSound()->Play(CSound::LABEL_SE_DECISION_001);	// 決定音01
 	}
-}
-
-//============================================================
-//	コンテニュー表示処理
-//============================================================
-void CResultManager::UpdateContinue(void)
-{
-	if (m_fScale > 1.0f)
-	{ // 拡大率が最小値より大きい場合
-
-		// 拡大率を減算
-		m_fScale -= SUB_CONT_SCALE;
-
-		// コンテニューロゴ表示の大きさを設定
-		m_pContLogo->SetVec3Sizing(SIZE_CONT_LOGO * m_fScale);
-
-		for (int nCntResult = 0; nCntResult < SELECT_MAX; nCntResult++)
-		{ // 選択肢の総数分繰り返す
-
-			// コンテニュー表示の大きさを設定
-			m_apContinue[nCntResult]->SetVec3Sizing(SIZE_CONT * m_fScale);
-		}
-	}
-	else
-	{ // 拡大率が最小値以下の場合
-
-		// 拡大率を補正
-		m_fScale = 1.0f;
-
-		// コンテニューロゴ表示の大きさを設定
-		m_pContLogo->SetVec3Sizing(SIZE_CONT_LOGO);
-
-		for (int nCntResult = 0; nCntResult < SELECT_MAX; nCntResult++)
-		{ // 選択肢の総数分繰り返す
-
-			// コンテニュー表示の大きさを設定
-			m_apContinue[nCntResult]->SetVec3Sizing(SIZE_CONT);
-		}
-
-		// 状態を変更
-		m_state = STATE_WAIT;	// 遷移待機状態
-
-		// サウンドの再生
-		GET_MANAGER->GetSound()->Play(CSound::LABEL_SE_DECISION_001);	// 決定音01
-	}
-}
-
-//============================================================
-//	選択の更新処理
-//============================================================
-void CResultManager::UpdateSelect(void)
-{
-	// ポインタを宣言
-	CInputKeyboard	*pKeyboard	= GET_INPUTKEY;	// キーボード
-	CInputPad		*pPad		= GET_INPUTPAD;		// パッド
-
-	if (pKeyboard->IsTrigger(DIK_A)
-	||  pKeyboard->IsTrigger(DIK_LEFT)
-	||  pPad->IsTrigger(CInputPad::KEY_LEFT))
-	{ // 左移動の操作が行われた場合
-
-		// 左に選択をずらす
-		m_nSelect = (m_nSelect + (SELECT_MAX - 1)) % SELECT_MAX;
-
-		// サウンドの再生
-		GET_MANAGER->GetSound()->Play(CSound::LABEL_SE_SELECT_000);	// 選択操作音00
-	}
-	if (pKeyboard->IsTrigger(DIK_D)
-	||  pKeyboard->IsTrigger(DIK_RIGHT)
-	||  pPad->IsTrigger(CInputPad::KEY_RIGHT))
-	{ // 右移動の操作が行われた場合
-
-		// 右に選択をずらす
-		m_nSelect = (m_nSelect + 1) % SELECT_MAX;
-
-		// サウンドの再生
-		GET_MANAGER->GetSound()->Play(CSound::LABEL_SE_SELECT_000);	// 選択操作音00
-	}
-
-	// 前回の選択要素の色を黒に設定
-	m_apContinue[m_nOldSelect]->SetColor(DEFAULT_COL);
-
-	// 現在の選択要素の色を白に設定
-	m_apContinue[m_nSelect]->SetColor(CHOICE_COL);
-
-	// 現在の選択要素を代入
-	m_nOldSelect = m_nSelect;
 }
 
 //============================================================
@@ -642,22 +428,8 @@ void CResultManager::UpdateTransition(void)
 			if (GET_MANAGER->GetFade()->GetState() == CFade::FADE_NONE)
 			{ // フェード中ではない場合
 
-				switch (m_nSelect)
-				{ // 選択ごとの処理
-				case SELECT_YES:
-
-					// シーンの設定
-					GET_MANAGER->SetScene(CScene::MODE_GAME);	// ゲーム画面
-
-					break;
-
-				case SELECT_NO:
-
-					// シーンの設定
-					GET_MANAGER->SetScene(CScene::MODE_RANKING);	// ランキング画面
-
-					break;
-				}
+				// シーンの設定
+				GET_MANAGER->SetScene(CScene::MODE_RANKING);	// ランキング画面
 
 				// サウンドの再生
 				GET_MANAGER->GetSound()->Play(CSound::LABEL_SE_DECISION_000);	// 決定音00
@@ -683,22 +455,6 @@ void CResultManager::SkipStaging(void)
 
 	// スコアの大きさを設定
 	m_pScore->SetVec3Sizing(SIZE_VALUE);
-
-	// コンテニューロゴ表示の描画開始
-	m_pContLogo->SetEnableDraw(true);
-
-	// コンテニューロゴ表示の大きさを設定
-	m_pContLogo->SetVec3Sizing(SIZE_CONT_LOGO);
-
-	for (int nCntResult = 0; nCntResult < SELECT_MAX; nCntResult++)
-	{ // 選択肢の総数分繰り返す
-
-		// コンテニュー表示の描画開始
-		m_apContinue[nCntResult]->SetEnableDraw(true);
-
-		// コンテニュー表示の大きさを設定
-		m_apContinue[nCntResult]->SetVec3Sizing(SIZE_CONT);
-	}
 
 	// フェードの透明度を設定
 	m_pFade->SetColor(SETCOL_FADE);

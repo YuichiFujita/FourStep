@@ -23,6 +23,7 @@
 #include "stick.h"
 #include "ground.h"
 #include "EffectModel.h"
+#include "objectOrbit.h"
 
 //************************************************************
 //	定数宣言
@@ -64,6 +65,7 @@ const char *CPlayer::mc_apModelFile[] =	// モデル定数
 CPlayer::CPlayer() : CObjectModel(CObject::LABEL_PLAYER, PRIORITY)
 {
 	// メンバ変数をクリア
+	m_pOrbit		= nullptr;		// 軌跡
 	m_oldPos		= VEC3_ZERO;	// 過去位置
 	m_move			= VEC3_ZERO;	// 移動量
 	m_destRot		= VEC3_ZERO;	// 目標向き
@@ -90,6 +92,7 @@ CPlayer::~CPlayer()
 HRESULT CPlayer::Init(void)
 {
 	// メンバ変数を初期化
+	m_pOrbit		= nullptr;		// 軌跡
 	m_oldPos		= VEC3_ZERO;	// 過去位置
 	m_move			= VEC3_ZERO;	// 移動量
 	m_destRot		= VEC3_ZERO;	// 目標向き
@@ -120,8 +123,12 @@ HRESULT CPlayer::Init(void)
 	{
 		m_pShadow = CObjectModel::Create(VEC3_ZERO, VEC3_ZERO);
 		m_pShadow->CObjectModel::SetLabel(LABEL_UI);
+		m_pShadow->CObjectModel::SetPriority(LABEL_UI);
 		m_pShadow->BindModel("data\\MODEL\\PLAYER\\player_shadow.x");
 	}
+
+	// 軌跡の生成
+	m_pOrbit = CObjectOrbit::Create(GetPtrMtxWorld(), CObjectOrbit::SOffset(D3DXVECTOR3(30.0f, 5.0f, 0.0f), D3DXVECTOR3(-30.0f, 5.0f, 0.0f), XCOL_CYAN), 30, 1, false);
 
 	// 成功を返す
 	return S_OK;
@@ -134,6 +141,9 @@ void CPlayer::Uninit(void)
 {
 	// オブジェクトモデルの終了
 	CObjectModel::Uninit();
+
+	// 軌跡の終了
+	m_pOrbit->Uninit();
 
 	if (m_pAtkUI != nullptr)
 	{
@@ -221,6 +231,9 @@ void CPlayer::Update(void)
 		assert(false);
 		break;
 	}
+
+	// 軌跡の更新
+	m_pOrbit->Update();
 
 	// オブジェクトモデルの更新
 	CObjectModel::Update();

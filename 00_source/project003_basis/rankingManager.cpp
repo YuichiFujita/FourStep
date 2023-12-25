@@ -73,7 +73,7 @@ namespace
 		const D3DXVECTOR3 SPACE_PART	= D3DXVECTOR3(SIZE_PART.x * 0.85f, 0.0f, 0.0f);	// クリアタイム表示の区切り空白
 
 		const float	SET_SCALE		= 0.05f;	// クリアタイム表示の初期拡大率
-		const float	ADD_SCALE		= 0.1f;		// クリアタイム表示の拡大率加算量
+		const float	ADD_SCALE		= 0.255f;		// クリアタイム表示の拡大率加算量
 		const float	MAX_SUB_SCALE	= 0.085f;	// クリアタイム表示の拡大率の最大減算量
 		const int	WAIT_CNT		= 15;		// クリアタイム表示待機フレーム
 	}
@@ -656,7 +656,7 @@ void CRankingManager::UpdateTime(void)
 	{ // 拡大率が最小値より大きい場合
 
 		// 拡大率を加算
-		m_fScale += time::ADD_SCALE - ((time::MAX_SUB_SCALE) / (float)(ranking::NUM_RANKING - 1)) * fabsf((float)m_nCounterDraw - (float)(ranking::NUM_RANKING - 1));
+		m_fScale += time::ADD_SCALE;
 
 		// クリアタイム表示の大きさを設定
 		m_apScore[m_nCounterDraw]->SetVec3Sizing(time::SIZE_VAL * m_fScale);
