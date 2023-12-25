@@ -35,7 +35,18 @@ public:
 		STATE_NONE = 0,	// 何もしない状態
 		STATE_SPAWN,	// スポーン状態
 		STATE_NORMAL,	// 通常状態
+		STATE_KNOCK,	// 吹っ飛び状態
+		STATE_DEATH,	// 死亡状態
 		STATE_MAX		// この列挙型の総数
+	};
+
+	// 軸列挙
+	enum EAxis
+	{
+		AXIS_X = 0,	// X軸
+		AXIS_Y,		// Y軸
+		AXIS_Z,		// Z軸
+		AXIS_MAX	// この列挙型の総数
 	};
 
 	// コンストラクタ
@@ -70,6 +81,8 @@ private:
 	// メンバ関数
 	void UpdateSpawn(void);		// スポーン状態時の更新
 	void UpdateNormal(void);	// 通常状態時の更新
+	void UpdateKnock(void);		// 吹っ飛び状態時の更新
+	void UpdateDeath(void);		// 死亡状態時の更新
 
 	void UpdateOldPosition(void);			// 過去位置の更新
 	void UpdateMove(void);					// 移動量・目標向きの更新
@@ -78,10 +91,12 @@ private:
 	void UpdateBullet(void);				// 射撃の更新
 	void UpdateGravity(void);				// 重力の更新
 	bool UpdateLanding(D3DXVECTOR3& rPos);	// 着地状況の更新
-	void UpdatePosition(D3DXVECTOR3& rPos);	// 位置の更新
 	void UpdateRotation(D3DXVECTOR3& rRot);	// 向きの更新
 	bool UpdateFadeOut(const float fAdd);	// フェードアウト状態時の更新
 	bool UpdateFadeIn(const float fSub);	// フェードイン状態時の更新
+
+	bool ResponseSingleGround(const EAxis axis, D3DXVECTOR3 &rPos);	// 地盤との一軸ごとの当たり判定
+	bool CollisionGround(D3DXVECTOR3 &rPos);	// 地盤との当たり判定
 
 	// 静的メンバ変数
 	static const char *mc_apModelFile[];	// モデル定数
