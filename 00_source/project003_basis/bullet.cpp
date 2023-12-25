@@ -9,6 +9,7 @@
 #include "gamemanager.h"
 #include "collision.h"
 #include "player.h"
+#include "effectmodel.h"
 
 //マクロ定義
 #define BLOCK_WIGHT (300.0f)		//横幅
@@ -144,6 +145,32 @@ void CBullet::Update(void)
 						// プレイヤーのヒット処理
 						pObjCheck->HitKnockBack(0, vecKnock);
 
+						// 変数を宣言
+						D3DXVECTOR3 vec = VEC3_ZERO;	// ベクトルの設定用
+						D3DXVECTOR3 pos = VEC3_ZERO;	// 位置の代入用
+						D3DXVECTOR3 move = VEC3_ZERO;	// 移動量の代入用
+						D3DXVECTOR3 rot = VEC3_ZERO;	// 向きの代入用
+
+						for (int nCntPart = 0; nCntPart < 15; nCntPart++)
+						{ // 生成されるエフェクト数分繰り返す
+
+							// ベクトルをランダムに設定
+							vec.x = sinf((float)(rand() % 629 - 314) / 100.0f) * 1.0f;
+							vec.y = cosf((float)(rand() % 629 - 314) / 100.0f) * 1.0f;
+							vec.z = cosf((float)(rand() % 629 - 314) / 100.0f) * 1.0f;
+
+							// ベクトルを正規化
+							D3DXVec3Normalize(&vec, &vec);
+
+							// 移動量を設定
+							move = vec * 10.0f;
+
+							CEffectModel* pModel = CEffectModel::Create(true);
+							pModel->SetVec3Position(posEnemy);
+							pModel->SetMove(move);
+							pModel->SetVec3Scaling(D3DXVECTOR3(0.4f, 0.4f, 0.4f));
+						}
+
 						// 自身の玉の終了
 						Uninit();
 						return;
@@ -164,6 +191,32 @@ void CBullet::Update(void)
 		{
 			D3DXVECTOR3 vecKnock = pPlayer->GetVec3Position() - GetVec3Position();	// ノックバックベクトル
 			D3DXVec3Normalize(&vecKnock, &vecKnock);	// 正規化
+
+						// 変数を宣言
+			D3DXVECTOR3 vec = VEC3_ZERO;	// ベクトルの設定用
+			D3DXVECTOR3 pos = VEC3_ZERO;	// 位置の代入用
+			D3DXVECTOR3 move = VEC3_ZERO;	// 移動量の代入用
+			D3DXVECTOR3 rot = VEC3_ZERO;	// 向きの代入用
+
+			for (int nCntPart = 0; nCntPart < 15; nCntPart++)
+			{ // 生成されるエフェクト数分繰り返す
+
+				// ベクトルをランダムに設定
+				vec.x = sinf((float)(rand() % 629 - 314) / 100.0f) * 1.0f;
+				vec.y = cosf((float)(rand() % 629 - 314) / 100.0f) * 1.0f;
+				vec.z = cosf((float)(rand() % 629 - 314) / 100.0f) * 1.0f;
+
+				// ベクトルを正規化
+				D3DXVec3Normalize(&vec, &vec);
+
+				// 移動量を設定
+				move = vec * 10.0f;
+
+				CEffectModel* pModel = CEffectModel::Create(false);
+				pModel->SetVec3Position(pPlayer->GetVec3Position());
+				pModel->SetMove(move);
+				pModel->SetVec3Scaling(D3DXVECTOR3(0.4f, 0.4f, 0.4f));
+			}
 
 			// プレイヤーのヒット処理
 			pPlayer->HitKnockBack(0, vecKnock);
