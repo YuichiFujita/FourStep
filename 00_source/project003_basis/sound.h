@@ -46,6 +46,9 @@ public:
 		LABEL_SE_STICK,			// ‚­‚Á‚Â‚«‰¹
 		LABEL_SE_HIT,			// ‚Ô‚Â‚©‚è‰¹
 		LABEL_SE_SLASH,			// ‚«‚é‰¹
+		LABEL_SE_SHOT,			// Œ‚‚Â‰¹
+		LABEL_SE_FALL,			// —Ž‚¿‚é‰¹
+		LABEL_SE_FLY,			// ƒWƒƒƒ“ƒv‰¹
 		LABEL_MAX,				// ‚±‚Ì—ñ‹“Œ^‚Ì‘”
 	};
 

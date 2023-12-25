@@ -30,6 +30,8 @@ namespace
 		"data\\MODEL\\SCORE\\suuji_8.x",
 		"data\\MODEL\\SCORE\\suuji_9.x",
 	};
+
+	const char *MODEL_FILE_LOGO = "data\\MODEL\\SCORE\\moji_score.x";
 }
 
 //************************************************************
@@ -50,6 +52,7 @@ CScore::CScore() : CObject(CObject::LABEL_NONE, SCORE_PRIO)
 {
 	// メンバ変数をクリア
 	memset(&m_apValue[0], 0, sizeof(m_apValue));	// 数値の情報
+	m_pLogo	= nullptr;		// ロゴの情報
 	m_pos	= VEC3_ZERO;	// 位置
 	m_scale	= VEC3_ZERO;	// 大きさ
 	m_space	= VEC3_ZERO;	// 空白
@@ -71,10 +74,27 @@ HRESULT CScore::Init(void)
 {
 	// メンバ変数を初期化
 	memset(&m_apValue[0], 0, sizeof(m_apValue));	// 数値の情報
+	m_pLogo	= nullptr;		// ロゴの情報
 	m_pos	= VEC3_ZERO;	// 位置
 	m_scale	= VEC3_ZERO;	// 大きさ
 	m_space	= VEC3_ZERO;	// 空白
 	m_nNum	= 0;			// スコア
+
+	// 数字の生成
+	m_pLogo = CModelUI::Create(VEC3_ZERO);
+	if (m_pLogo == nullptr)
+	{ // 生成に失敗した場合
+
+		// 失敗を返す
+		assert(false);
+		return E_FAIL;
+	}
+
+	// 優先順位を設定
+	m_pLogo->SetPriority(SCORE_PRIO);
+
+	// 数字の設定
+	m_pLogo->BindModel(MODEL_FILE_LOGO);
 
 	for (int nCntScore = 0; nCntScore < MAX_SCORE; nCntScore++)
 	{ // スコアの桁数分繰り返す
@@ -113,6 +133,9 @@ void CScore::Uninit(void)
 		m_apValue[nCntScore]->Uninit();
 	}
 
+	// 数字の終了
+	m_pLogo->Uninit();
+
 	// 自身のオブジェクトを破棄
 	Release();
 }
@@ -128,6 +151,9 @@ void CScore::Update(void)
 		// 数字の更新
 		m_apValue[nCntScore]->Update();
 	}
+
+	// 数字の更新
+	m_pLogo->Update();
 }
 
 //============================================================
@@ -382,6 +408,12 @@ void CScore::SetDrawValue(void)
 		}
 	}
 	else { assert(false); }	// 非使用中
+
+	// 数字の位置を設定
+	m_pLogo->SetVec3Position(m_pos - D3DXVECTOR3(500.0f, -10.0f, 0.0f));
+
+	// 数字の大きさを設定
+	m_pLogo->SetVec3Scaling(m_scale * 0.8f);
 }
 
 //============================================================
