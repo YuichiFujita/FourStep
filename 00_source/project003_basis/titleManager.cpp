@@ -25,7 +25,8 @@
 #define POS_LOGO_GIVE	(D3DXVECTOR3(710.0f,  310.0f, 0.0f))	// タイトルロゴの位置 (GIVE)
 #define POS_LOGO_UP		(D3DXVECTOR3(1050.0f, 320.0f, 0.0f))	// タイトルロゴの位置 (UP!)
 
-#define SIZE_TITLE	(D3DXVECTOR3(666.0f, 290.0f, 0.0f) * 0.8f)	// タイトルロゴの大きさ
+#define POS_TITLE	(D3DXVECTOR3(SCREEN_CENT.x, 240.0f, 0.0f))	// タイトルロゴの位置
+#define SIZE_TITLE	(D3DXVECTOR3(512.0f, 202.0f, 0.0f)*1.35f)	// タイトルロゴの大きさ
 #define INIT_SCALE	(15.0f)	// タイトルロゴの初期拡大率
 #define SUB_SCALE	(0.65f)	// タイトルロゴ拡大率の減算量
 
@@ -46,11 +47,10 @@
 //************************************************************
 //	静的メンバ変数宣言
 //************************************************************
-const char *CTitleManager::mc_apLogoTextureFile[] =	// ロゴテクスチャ定数
+const char *CTitleManager::mc_apTextureFile[] =	// ロゴテクスチャ定数
 {
-	"data\\TEXTURE\\title000.png",	// NEVERテクスチャ
-	"data\\TEXTURE\\title001.png",	// GIVEテクスチャ
-	"data\\TEXTURE\\title002.png",	// UP!テクスチャ
+	"data\\TEXTURE\\title000.png",	// 背景テクスチャ
+	"data\\TEXTURE\\title001.png",	// タイトルテクスチャ
 };
 const char *CTitleManager::mc_apSelectTextureFile[] =	// 選択テクスチャ定数
 {
@@ -67,10 +67,11 @@ const char *CTitleManager::mc_apSelectTextureFile[] =	// 選択テクスチャ定数
 CTitleManager::CTitleManager()
 {
 	// メンバ変数をクリア
-	memset(&m_apLogo[0], 0, sizeof(m_apLogo));		// タイトル表示の情報
 	memset(&m_apSelect[0], 0, sizeof(m_apSelect));	// 選択表示の情報
-	m_pFade = nullptr;			// フェードの情報
-	m_pSelectBG = nullptr;		// 選択背景の情報
+	m_pLogo = nullptr;		// タイトルの情報
+	m_pFade = nullptr;		// フェードの情報
+	m_pBG = nullptr;		// 背景の情報
+	m_pSelectBG = nullptr;	// 選択背景の情報
 	m_state = STATE_NONE;	// 状態
 	m_fScale = 0.0f;		// タイトル拡大率
 	m_nSelect = 0;			// 現在の選択
@@ -90,26 +91,42 @@ CTitleManager::~CTitleManager()
 //============================================================
 HRESULT CTitleManager::Init(void)
 {
-	// 変数配列を宣言
-	D3DXVECTOR3 aPosLogo[] =	// ロゴの位置
-	{ // 初期値
-		POS_LOGO_NEVER,	// NEVERの位置
-		POS_LOGO_GIVE,	// GIVEの位置
-		POS_LOGO_UP,	// UP!の位置
-	};
-
 	// ポインタを宣言
 	CTexture *pTexture = GET_MANAGER->GetTexture();	// テクスチャへのポインタ
 
 	// メンバ変数を初期化
-	memset(&m_apLogo[0], 0, sizeof(m_apLogo));		// タイトル表示の情報
 	memset(&m_apSelect[0], 0, sizeof(m_apSelect));	// 選択表示の情報
-	m_pFade = nullptr;				// フェードの情報
-	m_pSelectBG = nullptr;			// 選択背景の情報
+	m_pLogo = nullptr;			// タイトルの情報
+	m_pFade = nullptr;			// フェードの情報
+	m_pBG = nullptr;			// 背景の情報
+	m_pSelectBG = nullptr;		// 選択背景の情報
 	m_state = STATE_FADEOUT;	// 状態
 	m_fScale = INIT_SCALE;		// タイトル拡大率
 	m_nSelect = 0;				// 現在の選択
 	m_nOldSelect = 0;			// 前回の選択
+
+	//--------------------------------------------------------
+	//	選択背景の生成・設定
+	//--------------------------------------------------------
+	// 選択背景の生成
+	m_pBG = CObject2D::Create
+	( // 引数
+		SCREEN_CENT,	// 位置
+		SCREEN_SIZE		// 大きさ
+	);
+	if (m_pBG == nullptr)
+	{ // 生成に失敗した場合
+
+		// 失敗を返す
+		assert(false);
+		return E_FAIL;
+	}
+
+	// テクスチャを登録・割当
+	m_pBG->BindTexture(pTexture->Regist(mc_apTextureFile[TEXTURE_BG]));
+
+	// 優先順位を設定
+	m_pBG->SetPriority(TITLE_PRIO);
 
 	//--------------------------------------------------------
 	//	選択背景の生成・設定
@@ -171,32 +188,28 @@ HRESULT CTitleManager::Init(void)
 	//--------------------------------------------------------
 	//	タイトルロゴの生成・設定
 	//--------------------------------------------------------
-	for (int nCntTitle = 0; nCntTitle < LOGO_MAX; nCntTitle++)
-	{ // タイトルロゴの総数分繰り返す
+	// タイトルロゴの生成
+	m_pLogo = CObject2D::Create
+	( // 引数
+		POS_TITLE,	// 位置
+		SIZE_TITLE * INIT_SCALE	// 大きさ
+	);
+	if (m_pLogo == nullptr)
+	{ // 生成に失敗した場合
 
-		// タイトルロゴの生成
-		m_apLogo[nCntTitle] = CObject2D::Create
-		( // 引数
-			aPosLogo[nCntTitle],	// 位置
-			SIZE_TITLE	// 大きさ
-		);
-		if (m_apLogo[nCntTitle] == nullptr)
-		{ // 生成に失敗した場合
-
-			// 失敗を返す
-			assert(false);
-			return E_FAIL;
-		}
-
-		// テクスチャを登録・割当
-		m_apLogo[nCntTitle]->BindTexture(pTexture->Regist(mc_apLogoTextureFile[nCntTitle]));
-
-		// 優先順位を設定
-		m_apLogo[nCntTitle]->SetPriority(TITLE_PRIO);
-
-		// 描画をしない設定にする
-		m_apLogo[nCntTitle]->SetEnableDraw(false);
+		// 失敗を返す
+		assert(false);
+		return E_FAIL;
 	}
+
+	// テクスチャを登録・割当
+	m_pLogo->BindTexture(pTexture->Regist(mc_apTextureFile[TEXTURE_LOGO]));
+
+	// 優先順位を設定
+	m_pLogo->SetPriority(TITLE_PRIO);
+
+	// 描画をしない設定にする
+	m_pLogo->SetEnableDraw(false);
 
 	//--------------------------------------------------------
 	//	フェードの生成・設定
@@ -229,12 +242,11 @@ HRESULT CTitleManager::Init(void)
 //============================================================
 void CTitleManager::Uninit(void)
 {
-	for (int nCntTitle = 0; nCntTitle < LOGO_MAX; nCntTitle++)
-	{ // タイトルロゴの総数分繰り返す
+	// 選択背景の終了
+	m_pBG->Uninit();
 
-		// タイトルロゴの終了
-		m_apLogo[nCntTitle]->Uninit();
-	}
+	// タイトルロゴの終了
+	m_pLogo->Uninit();
 
 	for (int nCntTitle = 0; nCntTitle < SELECT_MAX; nCntTitle++)
 	{ // 選択項目の総数分繰り返す
@@ -292,12 +304,11 @@ void CTitleManager::Update(void)
 		break;
 	}
 
-	for (int nCntTitle = 0; nCntTitle < LOGO_MAX; nCntTitle++)
-	{ // タイトルロゴの総数分繰り返す
+	// 選択背景の更新
+	m_pBG->Update();
 
-		// タイトルロゴの更新
-		m_apLogo[nCntTitle]->Update();
-	}
+	// タイトルロゴの更新
+	m_pLogo->Update();
 
 	for (int nCntTitle = 0; nCntTitle < SELECT_MAX; nCntTitle++)
 	{ // 選択項目の総数分繰り返す
@@ -391,12 +402,8 @@ void CTitleManager::UpdateFade(void)
 		// 透明度を補正
 		colFade.a = 0.0f;
 
-		for (int nCntTitle = 0; nCntTitle < LOGO_MAX; nCntTitle++)
-		{ // タイトルロゴの総数分繰り返す
-
-			// 描画をする設定にする
-			m_apLogo[nCntTitle]->SetEnableDraw(true);
-		}
+		// 描画をする設定にする
+		m_pLogo->SetEnableDraw(true);
 
 		for (int nCntTitle = 0; nCntTitle < SELECT_MAX; nCntTitle++)
 		{ // 選択項目の総数分繰り返す
@@ -427,12 +434,8 @@ void CTitleManager::UpdateMove(void)
 		// 拡大率を減算
 		m_fScale -= SUB_SCALE;
 
-		for (int nCntTitle = 0; nCntTitle < LOGO_MAX; nCntTitle++)
-		{ // タイトルロゴの総数分繰り返す
-
-			// タイトルロゴの大きさを設定
-			m_apLogo[nCntTitle]->SetVec3Sizing(SIZE_TITLE * m_fScale);
-		}
+		// タイトルロゴの大きさを設定
+		m_pLogo->SetVec3Sizing(SIZE_TITLE * m_fScale);
 	}
 	else
 	{ // 拡大率が最小値以下の場合
@@ -440,12 +443,8 @@ void CTitleManager::UpdateMove(void)
 		// 拡大率を補正
 		m_fScale = 1.0f;
 
-		for (int nCntTitle = 0; nCntTitle < LOGO_MAX; nCntTitle++)
-		{ // タイトルロゴの総数分繰り返す
-
-			// タイトルロゴの大きさを設定
-			m_apLogo[nCntTitle]->SetVec3Sizing(SIZE_TITLE);
-		}
+		// タイトルロゴの大きさを設定
+		m_pLogo->SetVec3Sizing(SIZE_TITLE);
 
 		// 状態を変更
 		m_state = STATE_WAIT;	// 遷移待機状態
@@ -570,15 +569,11 @@ void CTitleManager::ActSelect(void)
 void CTitleManager::SkipStaging(void)
 {
 	// タイトルロゴを表示状態に設定・大きさを正規化
-	for (int nCntTitle = 0; nCntTitle < LOGO_MAX; nCntTitle++)
-	{ // タイトルロゴの総数分繰り返す
+	// タイトルロゴの大きさを設定
+	m_pLogo->SetVec3Sizing(SIZE_TITLE);
 
-		// タイトルロゴの大きさを設定
-		m_apLogo[nCntTitle]->SetVec3Sizing(SIZE_TITLE);
-
-		// 描画をする設定にする
-		m_apLogo[nCntTitle]->SetEnableDraw(true);
-	}
+	// 描画をする設定にする
+	m_pLogo->SetEnableDraw(true);
 
 	// 選択表示を描画する設定にする
 	for (int nCntTitle = 0; nCntTitle < SELECT_MAX; nCntTitle++)

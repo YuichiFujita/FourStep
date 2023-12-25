@@ -23,8 +23,8 @@ namespace
 
 	namespace lesson
 	{
-		const D3DXVECTOR3 POS	= D3DXVECTOR3(640.0f, 580.0f, 0.0f);	// レッスン表示の位置
-		const D3DXVECTOR3 SIZE	= D3DXVECTOR3(1000.0f, 270.0f, 0.0f);	// レッスン表示の位置
+		const D3DXVECTOR3 POS	= SCREEN_CENT;	// レッスン表示の位置
+		const D3DXVECTOR3 SIZE	= SCREEN_SIZE;	// レッスン表示の位置
 	}
 
 	namespace control
@@ -39,14 +39,8 @@ namespace
 //************************************************************
 const char *CTutorialManager::mc_apTextureFile[] =	// テクスチャ定数
 {
-	"data\\TEXTURE\\tutorial000.png",	// 操作説明テクスチャ
-};
-const char *CTutorialManager::mc_apLessonTextureFile[] =	// レッスンテクスチャ定数
-{
-	"data\\TEXTURE\\lesson000.png",	// ジャンプ説明テクスチャ
-	"data\\TEXTURE\\lesson001.png",	// スライディング説明テクスチャ
-	"data\\TEXTURE\\lesson002.png",	// 壁走り説明テクスチャ
-	"data\\TEXTURE\\lesson003.png",	// 壁ジャンプ説明テクスチャ
+	"data\\TEXTURE\\tyu-toriaru.png",	// 操作説明テクスチャ
+	"data\\TEXTURE\\tutorial001.png",	// 終了説明テクスチャ
 };
 
 //************************************************************
@@ -96,6 +90,9 @@ HRESULT CTutorialManager::Init(void)
 	// 優先順位を設定
 	m_pExplain->SetPriority(PRIORITY);
 
+	// テクスチャを登録・割当
+	m_pExplain->BindTexture(mc_apTextureFile[TEXTURE_CONTROL]);
+
 	// 操作説明の生成
 	m_pControl = CObject2D::Create
 	( // 引数
@@ -111,7 +108,7 @@ HRESULT CTutorialManager::Init(void)
 	}
 
 	// テクスチャを登録・割当
-	m_pControl->BindTexture(mc_apTextureFile[TEXTURE_CONTROL]);
+	m_pControl->BindTexture(mc_apTextureFile[TEXTURE_END]);
 
 	// 優先順位を設定
 	m_pControl->SetPriority(PRIORITY);

@@ -67,12 +67,6 @@ HRESULT CSceneTutorial::Init(void)
 	//--------------------------------------------------------
 	//	初期設定
 	//--------------------------------------------------------
-	// カメラを設定
-	GET_MANAGER->GetCamera()->SetState(CCamera::STATE_FOLLOW);	// カメラを追従状態に設定
-
-	// プレイヤーを出現
-	CScene::GetPlayer()->SetSpawn();
-
 	// BGMの再生
 	GET_MANAGER->GetSound()->Play(CSound::LABEL_BGM_TUTORIAL);
 

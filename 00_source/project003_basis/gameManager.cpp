@@ -16,6 +16,7 @@
 #include "map.h"
 #include "retentionManager.h"
 #include "score.h"
+#include "rankingManager.h"
 
 //************************************************************
 //	静的メンバ変数宣言
@@ -96,15 +97,19 @@ void CGameManager::Update(void)
 			// スコアを設定
 			GET_RETENTION->SetScore(CSceneGame::GetScore()->Get());
 
-			// シーン遷移
-			GET_MANAGER->SetScene(CScene::MODE_RESULT, 60);
+			// ランキングに設定
+			CRankingManager::Set(CSceneGame::GetScore()->Get());
+
+			// 終了状態にする
+			m_state = STATE_END;
 		}
 
 		break;
 
 	case STATE_END:
 
-		// 無し
+		// シーン遷移
+		GET_MANAGER->SetScene(CScene::MODE_RESULT, 60);
 
 		break;
 

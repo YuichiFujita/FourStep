@@ -52,18 +52,21 @@ CScene::~CScene()
 //============================================================
 HRESULT CScene::Init(void)
 {
-	// ステージの生成
-	m_pStage = CStage::Create(m_mode);
-	if (m_pStage == nullptr)
-	{ // 非使用中の場合
+	if (m_mode == MODE_GAME)
+	{
+		// ステージの生成
+		m_pStage = CStage::Create(m_mode);
+		if (m_pStage == nullptr)
+		{ // 非使用中の場合
 
-		// 失敗を返す
-		assert(false);
-		return E_FAIL;
+			// 失敗を返す
+			assert(false);
+			return E_FAIL;
+		}
+
+		// プレイヤーオブジェクトの生成
+		m_pPlayer = CPlayer::Create();
 	}
-
-	// プレイヤーオブジェクトの生成
-	m_pPlayer = CPlayer::Create();
 
 	// 成功を返す
 	return S_OK;
@@ -74,13 +77,16 @@ HRESULT CScene::Init(void)
 //============================================================
 HRESULT CScene::Uninit(void)
 {
-	// ステージの破棄
-	if (FAILED(CStage::Release(m_pStage)))
-	{ // 破棄に失敗した場合
+	if (m_pStage != nullptr)
+	{
+		// ステージの破棄
+		if (FAILED(CStage::Release(m_pStage)))
+		{ // 破棄に失敗した場合
 
-		// 失敗を返す
-		assert(false);
-		return E_FAIL;
+			// 失敗を返す
+			assert(false);
+			return E_FAIL;
+		}
 	}
 
 	// 終了済みのオブジェクトポインタをnullptrにする
@@ -101,7 +107,6 @@ void CScene::Update(void)
 		// ステージの更新
 		m_pStage->Update();
 	}
-	else { assert(false); }	// 非使用中
 
 	if (GET_MANAGER->GetLight() != nullptr)
 	{ // 使用中の場合

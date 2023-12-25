@@ -29,8 +29,8 @@
 #define ADD_ALPHA		(0.008f)		// α値の加算量
 
 #define POS_RESULT_MISSION	(D3DXVECTOR3(440.0f, 150.0f, 0.0f))	// リザルト表示の遅刻回避の位置
-#define POS_RESULT_RESULT	(D3DXVECTOR3(780.0f, 150.0f, 0.0f))	// リザルト表示の成功失敗の位置
-#define SIZE_RESULT			(D3DXVECTOR3(500.0f, 200.0f, 0.0f))	// リザルト表示の大きさ
+#define POS_RESULT_RESULT	(D3DXVECTOR3(840.0f, 150.0f, 0.0f))	// リザルト表示の成功失敗の位置
+#define SIZE_RESULT			(D3DXVECTOR3(1280.0f, 260.0f, 0.0f)*0.5f)	// リザルト表示の大きさ
 #define SIZE_VALUE			(D3DXVECTOR3(120.0f, 140.0f, 0.0f))
 #define SPACE_VALUE			(D3DXVECTOR3(100.0f, 0.0f, 0.0f))
 #define SET_RESULT_SCALE	(15.0f)	// リザルト表示の初期拡大率
@@ -165,6 +165,9 @@ HRESULT CResultManager::Init(void)
 		return E_FAIL;
 	}
 
+	// テクスチャを登録・割当
+	m_pScoreTitle->BindTexture(pTexture->Regist(mc_apTextureFile[TEXTURE_SCORE]));
+
 	// 優先順位を設定
 	m_pScoreTitle->SetPriority(RESULT_PRIO);
 
@@ -193,8 +196,7 @@ HRESULT CResultManager::Init(void)
 	m_pScore->SetPriority(RESULT_PRIO);
 
 	// 描画をしない設定にする
-	m_pScore
-		->SetEnableDraw(false);
+	m_pScore->SetEnableDraw(false);
 
 	//--------------------------------------------------------
 	//	コンテニューロゴ表示の生成・設定
