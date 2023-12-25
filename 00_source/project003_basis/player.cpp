@@ -18,6 +18,7 @@
 #include "collision.h"
 #include "fade.h"
 #include "stage.h"
+#include "bullet.h"
 
 //************************************************************
 //	定数宣言
@@ -46,7 +47,7 @@ namespace
 //************************************************************
 const char *CPlayer::mc_apModelFile[] =	// モデル定数
 {
-	"data\\MODEL\\PLAYER\\1225_pl_002.x",	// プレイヤー
+	"data\\MODEL\\PLAYER\\1225_pl_003.x",	// プレイヤー
 };
 
 //************************************************************
@@ -61,6 +62,7 @@ CPlayer::CPlayer() : CObjectModel(CObject::LABEL_PLAYER, PRIORITY)
 	m_oldPos		= VEC3_ZERO;	// 過去位置
 	m_move			= VEC3_ZERO;	// 移動量
 	m_destRot		= VEC3_ZERO;	// 目標向き
+	m_RSrickRot		= 0.0f;
 	m_state			= STATE_NONE;	// 状態
 	m_nCounterState	= 0;			// 状態管理カウンター
 	m_bJump			= false;		// ジャンプ状況
@@ -358,8 +360,8 @@ void CPlayer::SetSpawn(void)
 	// プレイヤーの描画を再開
 	SetEnableDraw(true);
 
-	// 追従カメラの目標位置の設定
-	GET_MANAGER->GetCamera()->SetDestFollow();
+	//// 追従カメラの目標位置の設定
+	//GET_MANAGER->GetCamera()->SetDestFollow();
 
 	// サウンドの再生
 	GET_MANAGER->GetSound()->Play(CSound::LABEL_SE_SPAWN);	// 生成音
@@ -403,6 +405,12 @@ void CPlayer::UpdateNormal(void)
 
 	// ジャンプの更新
 	UpdateJump();
+
+	// 攻撃の更新
+	UpdateAttack();
+
+	// 射撃の更新
+	UpdateBullet();
 
 	// 重力の更新
 	UpdateGravity();
@@ -545,8 +553,8 @@ void CPlayer::UpdateMove(void)
 		{ // デッドゾーン以上の場合
 
 			// 移動量を更新
-			m_move.x += sinf(GET_INPUTPAD->GetPressLStickRot()) * MOVE;
-			m_move.z += cosf(GET_INPUTPAD->GetPressLStickRot()) * MOVE;
+			m_move.x += sinf(pCamera->GetVec3Rotation().y + GET_INPUTPAD->GetPressLStickRot() + D3DX_PI * 0.5f) * MOVE;
+			m_move.z += cosf(pCamera->GetVec3Rotation().y + GET_INPUTPAD->GetPressLStickRot() + D3DX_PI * 0.5f) * MOVE;
 		}
 	}
 	// 目標向きを設定
@@ -579,8 +587,18 @@ void CPlayer::UpdateJump(void)
 //============================================================
 void CPlayer::UpdateAttack(void)
 {
-	if (GET_INPUTKEY->IsTrigger(DIK_SPACE) ||
-		GET_INPUTPAD->IsTrigger(GET_INPUTPAD->KEY_A))
+	// 変数を宣言
+	D3DXVECTOR3 vecStickR = D3DXVECTOR3((float)GET_INPUTPAD->GetPressRStickX(), (float)GET_INPUTPAD->GetPressRStickY(), 0.0f);	// スティック各軸の倒し量
+	float fStickR = sqrtf(vecStickR.x * vecStickR.x + vecStickR.y * vecStickR.y) * 0.5f;	// スティックの倒し量
+	if (0.8f < fStickR)
+	{ // デッドゾーン以上の場合
+
+		m_RSrickRot = GET_INPUTPAD->GetPressRStickRot();
+
+	}
+
+	if (GET_INPUTKEY->IsTrigger(DIK_Y) ||
+		GET_INPUTPAD->IsTrigger(GET_INPUTPAD->KEY_Y))
 	{ // 操作が行われた場合
 
 	}
@@ -591,10 +609,27 @@ void CPlayer::UpdateAttack(void)
 //============================================================
 void CPlayer::UpdateBullet(void)
 {
-	if (GET_INPUTKEY->IsTrigger(DIK_SPACE) ||
-		GET_INPUTPAD->IsTrigger(GET_INPUTPAD->KEY_A))
+	// 変数を宣言
+	D3DXVECTOR3 vecStickR = D3DXVECTOR3((float)GET_INPUTPAD->GetPressRStickX(), (float)GET_INPUTPAD->GetPressRStickY(), 0.0f);	// スティック各軸の倒し量
+	float fStickR = sqrtf(vecStickR.x * vecStickR.x + vecStickR.y * vecStickR.y) * 0.5f;	// スティックの倒し量
+	if (0.8f < fStickR)
+	{ // デッドゾーン以上の場合
+
+		m_RSrickRot = GET_INPUTPAD->GetPressRStickRot();
+
+	}
+
+	if (GET_INPUTKEY->IsTrigger(DIK_B) ||
+		GET_INPUTPAD->IsTrigger(GET_INPUTPAD->KEY_B))
 	{ // 操作が行われた場合
 
+		CBullet* pBullet = CBullet::Create();
+		pBullet->SetVec3Position(GetVec3Position());
+		pBullet->SetMove(D3DXVECTOR3(
+			-cosf(m_RSrickRot) * 10.0f,
+			0.0f,
+			sinf(m_RSrickRot) * 10.0f
+		));
 	}
 }
 

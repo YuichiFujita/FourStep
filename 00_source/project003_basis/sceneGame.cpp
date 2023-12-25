@@ -133,7 +133,7 @@ HRESULT CSceneGame::Init(void)
 	//	初期設定
 	//--------------------------------------------------------
 	// カメラを設定
-	GET_MANAGER->GetCamera()->SetState(CCamera::STATE_CONTROL);	// カメラを追従状態に設定
+	GET_MANAGER->GetCamera()->SetState(CCamera::STATE_UPCAMERA);	// カメラを追従状態に設定
 
 	// プレイヤーを出現
 	CScene::GetPlayer()->SetSpawn();

@@ -30,6 +30,7 @@ public:
 	{
 		STATE_NONE = 0,	// なにもしない状態
 		STATE_CONTROL,	// 操作状態
+		STATE_UPCAMERA,	// 見下ろし状態
 		STATE_ROTATE,	// 回転状態
 		STATE_FOLLOW,	// 追従状態
 		STATE_ZOOM,		// ズーム状態
@@ -86,9 +87,11 @@ private:
 	void Follow(void);		// カメラの更新 (追従)
 	void Zoom(void);		// カメラの更新 (ズーム)
 	void Control(void);		// カメラの更新 (操作)
+	void UpCamera(void);	// カメラの更新 (見下ろし)
 	void Move(void);		// 位置の更新 (操作)
 	void Distance(void);	// 距離の更新 (操作)
 	void Rotation(void);	// 向きの更新 (操作)
+	void UpRotation(void);	// 向きの更新 (操作)
 
 	// メンバ変数
 	SCamera m_aCamera[TYPE_MAX];	// カメラの情報
