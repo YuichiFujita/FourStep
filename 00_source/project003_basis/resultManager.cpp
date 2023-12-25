@@ -15,7 +15,6 @@
 #include "texture.h"
 #include "model.h"
 #include "object2D.h"
-#include "timerManager.h"
 #include "retentionManager.h"
 
 //************************************************************
@@ -82,10 +81,8 @@ CResultManager::CResultManager()
 	// メンバ変数をクリア
 	memset(&m_apResult[0], 0, sizeof(m_apResult));		// リザルト表示の情報
 	memset(&m_apContinue[0], 0, sizeof(m_apContinue));	// コンテニュー表示の情報
-	m_pContLogo		= nullptr;			// コンテニューロゴの情報
-	m_pTimeLogo		= nullptr;			// タイムロゴの情報
-	m_pFade			= nullptr;			// フェードの情報
-	m_pTime			= nullptr;			// タイムの情報
+	m_pContLogo		= nullptr;		// コンテニューロゴの情報
+	m_pFade			= nullptr;		// フェードの情報
 	m_state			= STATE_NONE;	// 状態
 	m_nCounterState	= 0;			// 状態管理カウンター
 	m_nSelect		= SELECT_YES;	// 現在の選択
@@ -124,10 +121,8 @@ HRESULT CResultManager::Init(void)
 	// メンバ変数を初期化
 	memset(&m_apResult[0], 0, sizeof(m_apResult));		// リザルト表示の情報
 	memset(&m_apContinue[0], 0, sizeof(m_apContinue));	// コンテニュー表示の情報
-	m_pContLogo		= nullptr;			// コンテニューロゴの情報
-	m_pTimeLogo		= nullptr;			// タイムロゴの情報
-	m_pFade			= nullptr;			// フェードの情報
-	m_pTime			= nullptr;			// タイムの情報
+	m_pContLogo		= nullptr;		// コンテニューロゴの情報
+	m_pFade			= nullptr;		// フェードの情報
 	m_state			= STATE_FADEIN;	// 状態
 	m_nCounterState	= 0;			// 状態管理カウンター
 	m_nSelect		= SELECT_YES;	// 現在の選択
@@ -185,68 +180,6 @@ HRESULT CResultManager::Init(void)
 
 	// リザルト表示のテクスチャを設定
 	SetTexResult();
-
-	//--------------------------------------------------------
-	//	タイムロゴ表示の生成・設定
-	//--------------------------------------------------------
-	// タイムロゴ表示の生成
-	m_pTimeLogo = CObject2D::Create
-	( // 引数
-		POS_TIME_LOGO,					// 位置
-		SIZE_TIME_LOGO * SET_TIME_SCALE	// 大きさ
-	);
-	if (m_pTimeLogo == nullptr)
-	{ // 生成に失敗した場合
-
-		// 失敗を返す
-		assert(false);
-		return E_FAIL;
-	}
-
-	// テクスチャを登録・割当
-	m_pTimeLogo->BindTexture(pTexture->Regist(mc_apTextureFile[TEXTURE_TIME]));
-
-	// 優先順位を設定
-	m_pTimeLogo->SetPriority(RESULT_PRIO);
-
-	// 描画をしない設定にする
-	m_pTimeLogo->SetEnableDraw(false);
-
-	//--------------------------------------------------------
-	//	タイム表示の生成・設定
-	//--------------------------------------------------------
-	// タイマーマネージャーの生成
-	m_pTime = CTimerManager::Create
-	( // 引数
-		CTimerManager::TIME_SEC,			// 設定タイム
-		0,									// 制限時間
-		POS_TIME,							// 位置
-		SIZE_TIME_VAL * SET_TIME_SCALE,		// 数字の大きさ
-		SIZE_TIME_PART * SET_TIME_SCALE,	// 区切りの大きさ
-		SPACE_TIME_VAL,						// 数字の空白
-		SPACE_TIME_PART						// 区切りの空白
-	);
-	if (m_pTime == nullptr)
-	{ // 非使用中の場合
-
-		// 失敗を返す
-		assert(false);
-		return E_FAIL;
-	}
-
-	// 優先順位を設定
-	m_pTime->SetPriority(RESULT_PRIO);
-
-	// 描画をしない設定にする
-	m_pTime->SetEnableDraw(false);
-
-	// タイムを設定
-	if (!m_pTime->SetMSec(GET_RETENTION->GetTime()))
-	{ // 設定に失敗した場合
-
-		// 失敗を返す
-		return E_FAIL;
-	}
 
 	//--------------------------------------------------------
 	//	コンテニューロゴ表示の生成・設定
@@ -317,15 +250,6 @@ HRESULT CResultManager::Init(void)
 //============================================================
 HRESULT CResultManager::Uninit(void)
 {
-	// タイムの破棄
-	if (FAILED(CTimerManager::Release(m_pTime)))
-	{ // 破棄に失敗した場合
-
-		// 失敗を返す
-		assert(false);
-		return E_FAIL;
-	}
-
 	for (int nCntResult = 0; nCntResult < result::NUM_POLYGON; nCntResult++)
 	{ // リザルト表示の総数分繰り返す
 
@@ -342,9 +266,6 @@ HRESULT CResultManager::Uninit(void)
 
 	// コンテニューロゴ表示の終了
 	m_pContLogo->Uninit();
-
-	// タイムロゴ表示の終了
-	m_pTimeLogo->Uninit();
 
 	// フェードの終了
 	m_pFade->Uninit();
@@ -377,32 +298,6 @@ void CResultManager::Update(void)
 
 		// リザルト表示の更新
 		UpdateResult();
-
-		break;
-
-	case STATE_TIME_WAIT:	// タイム表示待機状態
-
-		// 表示待機の更新
-		if (UpdateDrawWait(TIME_WAIT_CNT))
-		{ // 待機完了の場合
-
-			// タイム表示の拡大率を設定
-			m_fScale = SET_TIME_SCALE;
-
-			// タイム表示の描画開始
-			m_pTimeLogo->SetEnableDraw(true);
-			m_pTime->SetEnableDraw(true);
-
-			// 状態を変更
-			m_state = STATE_TIME;	// タイム表示状態
-		}
-
-		break;
-
-	case STATE_TIME:	// タイム表示状態
-
-		// タイム表示の更新
-		UpdateTime();
 
 		break;
 
@@ -469,12 +364,6 @@ void CResultManager::Update(void)
 
 	// コンテニューロゴ表示の更新
 	m_pContLogo->Update();
-
-	// タイムロゴ表示の更新
-	m_pTimeLogo->Update();
-
-	// タイムの更新
-	m_pTime->Update();
 
 	// フェードの更新
 	m_pFade->Update();
@@ -613,65 +502,6 @@ void CResultManager::UpdateResult(void)
 			// リザルト表示の大きさを設定
 			m_apResult[nCntResult]->SetVec3Sizing(SIZE_RESULT);
 		}
-
-		switch (GET_RETENTION->GetResult())
-		{ // リザルトごとの処理
-		case CRetentionManager::RESULT_FAILED:
-
-			// 状態を変更
-			m_state = STATE_CONTINUE_WAIT;	// コンテニュー表示待機状態
-
-			break;
-
-		case CRetentionManager::RESULT_CLEAR:
-
-			// 状態を変更
-			m_state = STATE_TIME_WAIT;	// タイム表示待機状態
-
-			break;
-
-		default:
-
-			// エラーメッセージボックス
-			MessageBox(nullptr, "リザルトなしが設定されています", "警告！", MB_ICONWARNING);
-
-			// 状態を変更
-			m_state = STATE_TIME_WAIT;	// タイム表示待機状態
-
-			break;
-		}
-
-		// サウンドの再生
-		GET_MANAGER->GetSound()->Play(CSound::LABEL_SE_DECISION_001);	// 決定音01
-	}
-}
-
-//============================================================
-//	タイム表示処理
-//============================================================
-void CResultManager::UpdateTime(void)
-{
-	if (m_fScale > 1.0f)
-	{ // 拡大率が最小値より大きい場合
-
-		// 拡大率を減算
-		m_fScale -= SUB_TIME_SCALE;
-
-		// タイム表示の大きさを設定
-		m_pTimeLogo->SetVec3Sizing(SIZE_TIME_LOGO * m_fScale);
-		m_pTime->SetScalingValue(SIZE_TIME_VAL * m_fScale);
-		m_pTime->SetScalingPart(SIZE_TIME_PART * m_fScale);
-	}
-	else
-	{ // 拡大率が最小値以下の場合
-
-		// 拡大率を補正
-		m_fScale = 1.0f;
-
-		// タイム表示の大きさを設定
-		m_pTimeLogo->SetVec3Sizing(SIZE_TIME_LOGO);
-		m_pTime->SetScalingValue(SIZE_TIME_VAL);
-		m_pTime->SetScalingPart(SIZE_TIME_PART);
 
 		// 状態を変更
 		m_state = STATE_CONTINUE_WAIT;	// コンテニュー表示待機状態
@@ -838,19 +668,6 @@ void CResultManager::SkipStaging(void)
 
 		// リザルト表示の大きさを設定
 		m_apResult[nCntResult]->SetVec3Sizing(SIZE_RESULT);
-	}
-
-	if (GET_RETENTION->GetResult() == CRetentionManager::RESULT_CLEAR)
-	{ // クリアしている場合
-
-		// タイム表示をONにする
-		m_pTimeLogo->SetEnableDraw(true);
-		m_pTime->SetEnableDraw(true);
-
-		// タイム表示の大きさを設定
-		m_pTimeLogo->SetVec3Sizing(SIZE_TIME_LOGO);
-		m_pTime->SetScalingValue(SIZE_TIME_VAL);
-		m_pTime->SetScalingPart(SIZE_TIME_PART);
 	}
 
 	// コンテニューロゴ表示の描画開始

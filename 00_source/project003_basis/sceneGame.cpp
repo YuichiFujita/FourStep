@@ -13,8 +13,8 @@
 #include "camera.h"
 
 #include "gameManager.h"
-#include "timerManager.h"
 #include "stage.h"
+#include "score.h"
 #include "pause.h"
 #include "player.h"
 #include "enemy.h"
@@ -23,32 +23,13 @@
 //	マクロ定義
 //************************************************************
 
-#if _DEBUG
-
-#define TIME_LIMIT	(0)	// 制限時間
-
-#else
-
-#define TIME_LIMIT	(240)	// 制限時間
-
-#endif
-
-#define TIME_POS		(D3DXVECTOR3(710.0f, 50.0f, 0.0f))	// タイマー位置
-#define TIME_VAL_SIZE	(D3DXVECTOR3(72.0f, 96.0f, 0.0f))	// タイマー数字大きさ
-#define TIME_PART_SIZE	(D3DXVECTOR3(42.0f, 96.0f, 0.0f))	// タイマー区切り大きさ
-#define TIME_VAL_SPACE	(D3DXVECTOR3(TIME_VAL_SIZE.x  * 0.85f, 0.0f, 0.0f))	// タイマー数字空白
-#define TIME_PART_SPACE	(D3DXVECTOR3(TIME_PART_SIZE.x * 0.85f, 0.0f, 0.0f))	// タイマー区切り空白
-
-#define SCO_POS		(D3DXVECTOR3(825.0f, 50.0f, 0.0f))		// スコア位置
-#define SCO_SIZE	(D3DXVECTOR3(60.0f, 80.0f, 0.0f))		// スコア大きさ
-#define SCO_SPACE	(D3DXVECTOR3(SCO_SIZE.x, 0.0f, 0.0f))	// スコア空白
 
 //************************************************************
 //	静的メンバ変数宣言
 //************************************************************
 CGameManager	*CSceneGame::m_pGameManager  = nullptr;	// ゲームマネージャー
-CTimerManager	*CSceneGame::m_pTimerManager = nullptr;	// タイマーマネージャー
-CPause	*CSceneGame::m_pPause	= nullptr;					// ポーズ
+CScore	*CSceneGame::m_pScore	= nullptr;	// タイマーマネージャー
+CPause	*CSceneGame::m_pPause	= nullptr;	// ポーズ
 
 bool CSceneGame::m_bControlCamera = false;	// カメラの操作状況
 bool CSceneGame::m_bDrawUI = true;			// UIの描画状況
@@ -81,27 +62,15 @@ HRESULT CSceneGame::Init(void)
 	//--------------------------------------------------------
 	//	初期生成
 	//--------------------------------------------------------
-	// タイマーマネージャーの生成
-	m_pTimerManager = CTimerManager::Create
-	( // 引数
-		CTimerManager::TIME_SEC,	// 設定タイム
-		TIME_LIMIT,					// 制限時間
-		TIME_POS,					// 位置
-		TIME_VAL_SIZE,				// 数字の大きさ
-		TIME_PART_SIZE,				// 区切りの大きさ
-		TIME_VAL_SPACE,				// 数字の空白
-		TIME_PART_SPACE				// 区切りの空白
-	);
-	if (m_pTimerManager == nullptr)
+	// スコアの生成
+	m_pScore = CScore::Create(D3DXVECTOR3(790.0f, 430.0f, 0.0f), VEC3_ONE, D3DXVECTOR3(140.0f, 0.0f, 0.0f));
+	if (m_pScore == nullptr)
 	{ // 非使用中の場合
 
 		// 失敗を返す
 		assert(false);
 		return E_FAIL;
 	}
-
-	// ロゴの自動描画をONにする
-	m_pTimerManager->SetEnableLogoDraw(true);
 
 	// シーンの初期化
 	CScene::Init();		// ステージ・プレイヤーの生成
@@ -163,15 +132,6 @@ HRESULT CSceneGame::Uninit(void)
 		return E_FAIL;
 	}
 
-	// タイマーマネージャーの破棄
-	if (FAILED(CTimerManager::Release(m_pTimerManager)))
-	{ // 破棄に失敗した場合
-
-		// 失敗を返す
-		assert(false);
-		return E_FAIL;
-	}
-
 	// ポーズの破棄
 	if (FAILED(CPause::Release(m_pPause)))
 	{ // 破棄に失敗した場合
@@ -179,6 +139,11 @@ HRESULT CSceneGame::Uninit(void)
 		// 失敗を返す
 		assert(false);
 		return E_FAIL;
+	}
+
+	if (m_pScore != nullptr)
+	{
+		m_pScore->Uninit();
 	}
 
 	// シーンの終了
@@ -225,6 +190,11 @@ void CSceneGame::Update(void)
 		// TODO：後で消すエネミー生成
 		CEnemy::Create(CEnemy::TYPE_NORMAL, VEC3_ZERO, VEC3_ZERO);
 	}
+	else if (GET_INPUTKEY->IsPress(DIK_F8))
+	{
+		// TODO：後で消すスコア上昇
+		m_pScore->Add(1);
+	}
 
 	// デバッグ表示
 	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "======================================\n");
@@ -237,6 +207,7 @@ void CSceneGame::Update(void)
 	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "[F5]：カメラ操作のON/OFF\n");
 	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "[F6]：プレイヤースポーン\n");
 	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "[F7]：敵出るよ～ん\n");
+	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "[F8]：スコア加算～\n");
 
 	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "======================================\n");
 	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "　[デバッグ情報]\n");
@@ -255,14 +226,6 @@ void CSceneGame::Update(void)
 	if (m_pGameManager->GetState() == CGameManager::STATE_NORMAL)
 	{ // ゲームマネージャーが通常状態の場合
 
-		if (m_pTimerManager != nullptr)
-		{ // 使用中の場合
-
-			// タイマーマネージャーの更新
-			m_pTimerManager->Update();
-		}
-		else { assert(false); }	// 非使用中
-
 		if (m_pPause != nullptr)
 		{ // 使用中の場合
 
@@ -276,6 +239,11 @@ void CSceneGame::Update(void)
 
 			// シーンの更新
 			CScene::Update();
+
+			if (m_pScore != nullptr)
+			{
+				m_pScore->Update();
+			}
 		}
 
 #if _DEBUG
@@ -316,10 +284,10 @@ CGameManager *CSceneGame::GetGameManager(void)
 //============================================================
 //	タイマーマネージャー取得処理
 //============================================================
-CTimerManager *CSceneGame::GetTimerManager(void)
+CScore *CSceneGame::GetScore(void)
 {
-	// タイマーマネージャーのポインタを返す
-	return m_pTimerManager;
+	// スコアのポインタを返す
+	return m_pScore;
 }
 
 //============================================================
@@ -338,9 +306,6 @@ void CSceneGame::SetEnableDrawUI(const bool bDraw)
 {
 	// 引数のUIの描画状況を設定
 	m_bDrawUI = bDraw;
-
-	// タイマーの描画状況を設定
-	m_pTimerManager->SetEnableDraw(bDraw);
 }
 
 //============================================================

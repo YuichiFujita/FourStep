@@ -31,6 +31,13 @@ namespace
 		const float VIEW_ANGLE = D3DXToRadian(45.0f);	// 視野角
 	}
 
+	// モデルUIカメラ基本情報
+	namespace modelUI
+	{
+		const float VIEW_WIDTH = SCREEN_WIDTH * 1.8f;	// 画面の横幅
+		const float VIEW_HEIGHT = SCREEN_HEIGHT * 1.8f;	// 画面の縦幅
+	}
+
 	// 回転カメラ情報
 	namespace rotate
 	{
@@ -200,7 +207,7 @@ void CCamera::Update(void)
 
 		case STATE_UPCAMERA:	// 操作状態
 
-// カメラの更新 (操作)
+			// カメラの更新 (操作)
 			UpCamera();
 
 			break;
@@ -253,15 +260,36 @@ void CCamera::SetCamera(const EType type)
 	// プロジェクションマトリックスの初期化
 	D3DXMatrixIdentity(&m_aCamera[type].mtxProjection);
 
-	// プロジェクションマトリックスを作成
-	D3DXMatrixPerspectiveFovLH
-	( // 引数
-		&m_aCamera[type].mtxProjection,	// プロジェクションマトリックス
-		basic::VIEW_ANGLE,	// 視野角
-		basic::VIEW_ASPECT,	// 画面のアスペクト比
-		basic::VIEW_NEAR,	// Z軸の最小値
-		basic::VIEW_FAR		// Z軸の最大値
-	);
+	switch (type)
+	{ // カメラの種類ごとの処理
+	case TYPE_MAIN:		// メインカメラ
+
+		// プロジェクションマトリックスを透視投影で作成
+		D3DXMatrixPerspectiveFovLH
+		( // 引数
+			&m_aCamera[type].mtxProjection,	// プロジェクションマトリックス
+			basic::VIEW_ANGLE,	// 視野角
+			basic::VIEW_ASPECT,	// 画面のアスペクト比
+			basic::VIEW_NEAR,	// Z軸の最小値
+			basic::VIEW_FAR		// Z軸の最大値
+		);
+
+		break;
+
+	case TYPE_MODELUI:	// モデルUI表示カメラ
+
+		// プロジェクションマトリックスを平行投影で作成
+		D3DXMatrixOrthoLH
+		( // 引数
+			&m_aCamera[type].mtxProjection,	// プロジェクションマトリックス
+			modelUI::VIEW_WIDTH,			// 画面の縦幅
+			modelUI::VIEW_HEIGHT,			// 画面の横幅
+			basic::VIEW_NEAR,				// Z軸の最小値
+			basic::VIEW_FAR					// Z軸の最大値
+		);
+
+		break;
+	}
 
 	// プロジェクションマトリックスの設定
 	pDevice->SetTransform(D3DTS_PROJECTION, &m_aCamera[type].mtxProjection);

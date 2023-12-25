@@ -214,6 +214,7 @@
     <ClCompile Include="scenery.cpp" />
     <ClCompile Include="sceneTitle.cpp" />
     <ClCompile Include="sceneTutorial.cpp" />
+    <ClCompile Include="score.cpp" />
     <ClCompile Include="scroll2D.cpp" />
     <ClCompile Include="scrollMeshField.cpp" />
     <ClCompile Include="shadow.cpp" />
@@ -222,7 +223,6 @@
     <ClCompile Include="stage.cpp" />
     <ClCompile Include="stick.cpp" />
     <ClCompile Include="texture.cpp" />
-    <ClCompile Include="timerManager.cpp" />
     <ClCompile Include="titleManager.cpp" />
     <ClCompile Include="tutorialManager.cpp" />
     <ClCompile Include="useful.cpp" />
@@ -289,6 +289,7 @@
     <ClInclude Include="scenery.h" />
     <ClInclude Include="sceneTitle.h" />
     <ClInclude Include="sceneTutorial.h" />
+    <ClInclude Include="score.h" />
     <ClInclude Include="scroll2D.h" />
     <ClInclude Include="scrollMeshField.h" />
     <ClInclude Include="shadow.h" />
@@ -297,7 +298,6 @@
     <ClInclude Include="stage.h" />
     <ClInclude Include="stick.h" />
     <ClInclude Include="texture.h" />
-    <ClInclude Include="timerManager.h" />
     <ClInclude Include="titleManager.h" />
     <ClInclude Include="tutorialManager.h" />
     <ClInclude Include="useful.h" />

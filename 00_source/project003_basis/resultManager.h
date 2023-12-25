@@ -21,8 +21,7 @@ namespace result
 //************************************************************
 //	前方宣言
 //************************************************************
-class CObject2D;		// オブジェクト2Dクラス
-class CTimerManager;	// タイマーマネージャークラス
+class CObject2D;	// オブジェクト2Dクラス
 
 //************************************************************
 //	クラス定義
@@ -37,7 +36,6 @@ public:
 		TEXTURE_MISSION = 0,	// 遅刻回避テクスチャ
 		TEXTURE_CLEAR,			// 成功テクスチャ
 		TEXTURE_FAILED,			// 失敗テクスチャ
-		TEXTURE_TIME,			// タイム表示テクスチャ
 		TEXTURE_CONTINUE,		// コンテニュー表示テクスチャ
 		TEXTURE_YES,			// YESテクスチャ
 		TEXTURE_NO,				// NOテクスチャ
@@ -50,8 +48,6 @@ public:
 		STATE_NONE = 0,			// 何もしない状態
 		STATE_FADEIN,			// フェードイン状態
 		STATE_RESULT,			// リザルト表示状態
-		STATE_TIME_WAIT,		// タイム表示待機状態
-		STATE_TIME,				// タイム表示状態
 		STATE_CONTINUE_WAIT,	// コンテニュー表示待機状態
 		STATE_CONTINUE,			// コンテニュー表示状態
 		STATE_WAIT,				// 遷移待機状態
@@ -85,7 +81,6 @@ private:
 	// メンバ関数
 	void UpdateFade(void);			// フェードイン
 	void UpdateResult(void);		// リザルト表示
-	void UpdateTime(void);			// タイム表示
 	void UpdateContinue(void);		// コンテニュー表示
 	void UpdateSelect(void);		// 選択更新
 	void UpdateTransition(void);	// 遷移決定
@@ -100,9 +95,7 @@ private:
 	CObject2D *m_apResult[result::NUM_POLYGON];	// リザルト表示の情報
 	CObject2D *m_apContinue[SELECT_MAX];		// コンテニュー表示の情報
 	CObject2D *m_pContLogo;	// コンテニューロゴの情報
-	CObject2D *m_pTimeLogo;	// タイムロゴの情報
 	CObject2D *m_pFade;		// フェードの情報
-	CTimerManager *m_pTime;	// タイムの情報
 	EState m_state;			// 状態
 	int m_nCounterState;	// 状態管理カウンター
 	int m_nSelect;			// 現在の選択
