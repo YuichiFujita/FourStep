@@ -186,9 +186,6 @@
     <ClCompile Include="texture.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="timerManager.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="titleManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -229,6 +226,9 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="stick.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="score.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -407,9 +407,6 @@
     <ClInclude Include="texture.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="timerManager.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="titleManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -450,6 +447,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="stick.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="score.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

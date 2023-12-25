@@ -15,7 +15,6 @@
 #include "texture.h"
 #include "object2D.h"
 #include "anim2D.h"
-#include "timerManager.h"
 #include "retentionManager.h"
 
 //************************************************************
@@ -218,6 +217,7 @@ HRESULT CRankingManager::Init(void)
 		// パターンの設定
 		m_apRank[nCntRank]->SetPattern(nCntRank);
 
+#if 0
 		//----------------------------------------------------
 		//	クリアタイム表示の生成・設定
 		//----------------------------------------------------
@@ -264,6 +264,7 @@ HRESULT CRankingManager::Init(void)
 			assert(false);
 			return E_FAIL;
 		}
+#endif
 	}
 
 	// 成功を返す
@@ -278,6 +279,7 @@ HRESULT CRankingManager::Uninit(void)
 	for (int nCntRank = 0; nCntRank < ranking::NUM_RANKING; nCntRank++)
 	{ // ランキングの上位表示数分繰り返す
 
+#if 0
 		// クリアタイムの破棄
 		if (FAILED(CTimerManager::Release(m_apTime[nCntRank])))
 		{ // 破棄に失敗した場合
@@ -286,6 +288,7 @@ HRESULT CRankingManager::Uninit(void)
 			assert(false);
 			return E_FAIL;
 		}
+#endif
 
 		// 順位表示の終了
 		m_apRank[nCntRank]->Uninit();
@@ -371,8 +374,10 @@ void CRankingManager::Update(void)
 	for (int nCntRank = 0; nCntRank < ranking::NUM_RANKING; nCntRank++)
 	{ // ランキングの上位表示数分繰り返す
 
+#if 0
 		// クリアタイムの更新
 		m_apTime[nCntRank]->Update();
+#endif
 
 		// 順位表示の更新
 		m_apRank[nCntRank]->Update();
@@ -639,8 +644,10 @@ void CRankingManager::InitTime(void)
 	if (m_nCounterDraw >= 0)
 	{ // 描画し終わっていない場合
 
+#if 0
 		// 自動描画をONに設定
 		m_apTime[m_nCounterDraw]->SetEnableDraw(true);
+#endif
 
 		// クリアタイム表示の拡大率を設定
 		m_fScale = time::SET_SCALE;
@@ -670,9 +677,11 @@ void CRankingManager::UpdateTime(void)
 		// 拡大率を加算
 		m_fScale += time::ADD_SCALE - ((time::MAX_SUB_SCALE) / (float)(ranking::NUM_RANKING - 1)) * fabsf((float)m_nCounterDraw - (float)(ranking::NUM_RANKING - 1));
 
+#if 0
 		// クリアタイム表示の大きさを設定
 		m_apTime[m_nCounterDraw]->SetScalingValue(time::SIZE_VAL * m_fScale);
 		m_apTime[m_nCounterDraw]->SetScalingPart(time::SIZE_PART * m_fScale);
+#endif
 	}
 	else
 	{ // 拡大率が最小値以下の場合
@@ -696,9 +705,11 @@ void CRankingManager::RevisionTime(void)
 	// 拡大率を初期化
 	m_fScale = 1.0f;
 
+#if 0
 	// クリアタイム表示の大きさを設定
 	m_apTime[m_nCounterDraw]->SetScalingValue(time::SIZE_VAL);
 	m_apTime[m_nCounterDraw]->SetScalingPart(time::SIZE_PART);
+#endif
 
 	// 描画カウンターを減算
 	m_nCounterDraw--;
@@ -766,12 +777,14 @@ void CRankingManager::SkipStaging(void)
 	for (int nCntRank = 0; nCntRank < ranking::NUM_RANKING; nCntRank++)
 	{ // ランキングの上位表示数分繰り返す
 
+#if 0
 		// 自動描画をONに設定
 		m_apTime[nCntRank]->SetEnableDraw(true);
 
 		// クリアタイム表示の大きさを設定
 		m_apTime[nCntRank]->SetScalingValue(time::SIZE_VAL);
 		m_apTime[nCntRank]->SetScalingPart(time::SIZE_PART);
+#endif
 	}
 
 	// 状態を変更
@@ -920,8 +933,13 @@ void CRankingManager::Load(void)
 		if (pFile != nullptr)
 		{ // ファイルが開けた場合
 
-			// 変数配列を宣言
+#if 0
+			// 変数を宣言
 			long nMaxTime = CTimerManager::GetMaxTime();	// 最大タイム
+#else
+			// 変数を宣言
+			long nMaxTime = 0;	// 最大タイム
+#endif
 
 			for (int nCntRank = 0; nCntRank < ranking::NUM_RANKING; nCntRank++)
 			{ // ランキングの上位表示数分繰り返す

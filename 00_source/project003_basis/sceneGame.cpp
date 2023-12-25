@@ -13,7 +13,6 @@
 #include "camera.h"
 
 #include "gameManager.h"
-#include "timerManager.h"
 #include "stage.h"
 #include "pause.h"
 #include "player.h"
@@ -23,25 +22,6 @@
 //	マクロ定義
 //************************************************************
 
-#if _DEBUG
-
-#define TIME_LIMIT	(0)	// 制限時間
-
-#else
-
-#define TIME_LIMIT	(240)	// 制限時間
-
-#endif
-
-#define TIME_POS		(D3DXVECTOR3(710.0f, 50.0f, 0.0f))	// タイマー位置
-#define TIME_VAL_SIZE	(D3DXVECTOR3(72.0f, 96.0f, 0.0f))	// タイマー数字大きさ
-#define TIME_PART_SIZE	(D3DXVECTOR3(42.0f, 96.0f, 0.0f))	// タイマー区切り大きさ
-#define TIME_VAL_SPACE	(D3DXVECTOR3(TIME_VAL_SIZE.x  * 0.85f, 0.0f, 0.0f))	// タイマー数字空白
-#define TIME_PART_SPACE	(D3DXVECTOR3(TIME_PART_SIZE.x * 0.85f, 0.0f, 0.0f))	// タイマー区切り空白
-
-#define SCO_POS		(D3DXVECTOR3(825.0f, 50.0f, 0.0f))		// スコア位置
-#define SCO_SIZE	(D3DXVECTOR3(60.0f, 80.0f, 0.0f))		// スコア大きさ
-#define SCO_SPACE	(D3DXVECTOR3(SCO_SIZE.x, 0.0f, 0.0f))	// スコア空白
 
 //************************************************************
 //	静的メンバ変数宣言
@@ -81,28 +61,6 @@ HRESULT CSceneGame::Init(void)
 	//--------------------------------------------------------
 	//	初期生成
 	//--------------------------------------------------------
-	// タイマーマネージャーの生成
-	m_pTimerManager = CTimerManager::Create
-	( // 引数
-		CTimerManager::TIME_SEC,	// 設定タイム
-		TIME_LIMIT,					// 制限時間
-		TIME_POS,					// 位置
-		TIME_VAL_SIZE,				// 数字の大きさ
-		TIME_PART_SIZE,				// 区切りの大きさ
-		TIME_VAL_SPACE,				// 数字の空白
-		TIME_PART_SPACE				// 区切りの空白
-	);
-	if (m_pTimerManager == nullptr)
-	{ // 非使用中の場合
-
-		// 失敗を返す
-		assert(false);
-		return E_FAIL;
-	}
-
-	// ロゴの自動描画をONにする
-	m_pTimerManager->SetEnableLogoDraw(true);
-
 	// シーンの初期化
 	CScene::Init();		// ステージ・プレイヤーの生成
 
@@ -156,15 +114,6 @@ HRESULT CSceneGame::Uninit(void)
 {
 	// ゲームマネージャーの破棄
 	if (FAILED(CGameManager::Release(m_pGameManager)))
-	{ // 破棄に失敗した場合
-
-		// 失敗を返す
-		assert(false);
-		return E_FAIL;
-	}
-
-	// タイマーマネージャーの破棄
-	if (FAILED(CTimerManager::Release(m_pTimerManager)))
 	{ // 破棄に失敗した場合
 
 		// 失敗を返す
@@ -255,14 +204,6 @@ void CSceneGame::Update(void)
 	if (m_pGameManager->GetState() == CGameManager::STATE_NORMAL)
 	{ // ゲームマネージャーが通常状態の場合
 
-		if (m_pTimerManager != nullptr)
-		{ // 使用中の場合
-
-			// タイマーマネージャーの更新
-			m_pTimerManager->Update();
-		}
-		else { assert(false); }	// 非使用中
-
 		if (m_pPause != nullptr)
 		{ // 使用中の場合
 
@@ -338,9 +279,6 @@ void CSceneGame::SetEnableDrawUI(const bool bDraw)
 {
 	// 引数のUIの描画状況を設定
 	m_bDrawUI = bDraw;
-
-	// タイマーの描画状況を設定
-	m_pTimerManager->SetEnableDraw(bDraw);
 }
 
 //============================================================
