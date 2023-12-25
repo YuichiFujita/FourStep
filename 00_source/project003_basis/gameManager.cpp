@@ -53,7 +53,7 @@ HRESULT CGameManager::Init(void)
 
 	if (m_pMap == nullptr)
 	{
-		m_pMap = CMap::Create(VEC3_ZERO, VEC3_ZERO, D3DXVECTOR3(50.0f, 50.0f, 50.0f), VEC2_ONE, VEC2_ONE, VEC2_ONE);
+		m_pMap = CMap::Create(D3DXVECTOR3(-1000.0f,0.0f,-1000.0f), VEC3_ZERO, D3DXVECTOR3(50.0f, 50.0f, 50.0f), VEC2_ONE, VEC2_ONE, VEC2_ONE);
 		m_pMap->Init();
 	}
 

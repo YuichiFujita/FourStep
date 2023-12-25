@@ -125,7 +125,7 @@ void CBullet::Update(void)
 
 					D3DXVECTOR3 posEnemy = pObjCheck->GetVec3Position();	// 敵位置
 
-					if (collision::Circle3D(GetVec3Position(), posEnemy, 30.0f,30.0f) == true)
+					if (collision::Circle3D(GetVec3Position(), posEnemy, 30.0f,50.0f) == true)
 					{
 						D3DXVECTOR3 vecKnock = posEnemy - GetVec3Position();	// ノックバックベクトル
 						D3DXVec3Normalize(&vecKnock, &vecKnock);	// 正規化

@@ -48,6 +48,7 @@ CGround::~CGround()
 HRESULT CGround::Init(void)
 {
 	// メンバ変数を初期化
+	m_fLife = 1.0f;
 	m_WNumber = -1;
 	m_HNumber = -1;
 
@@ -114,6 +115,12 @@ void CGround::Update(void)
 {
 	// オブジェクトメッシュキューブの更新
 	CObjectMeshCube::Update();
+	SetColor(D3DXCOLOR(m_fLife, m_fLife, m_fLife, 1.0f));
+
+	if (m_fLife < 0.0f)
+	{
+		Uninit();
+	}
 }
 
 //============================================================

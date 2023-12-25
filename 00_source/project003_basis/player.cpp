@@ -21,6 +21,7 @@
 #include "bullet.h"
 #include "enemy.h"
 #include "stick.h"
+#include "ground.h"
 
 //************************************************************
 //	定数宣言
@@ -139,6 +140,40 @@ void CPlayer::Update(void)
 {
 	// 過去位置の更新
 	UpdateOldPosition();
+
+	for (int nCntPri = 0; nCntPri < object::MAX_PRIO; nCntPri++)
+	{ // 優先順位の総数分繰り返す
+		// ポインタを宣言
+		CObject* pObjectTop = CObject::GetTop(nCntPri);	// 先頭オブジェクト
+		if (pObjectTop != NULL)
+		{ // 先頭が存在する場合
+
+			// ポインタを宣言
+			CObject* pObjCheck = pObjectTop;	// オブジェクト確認用
+
+			while (pObjCheck != NULL)
+			{ // オブジェクトが使用されている場合繰り返す
+
+				// ポインタを宣言
+				CObject* pObjectNext = pObjCheck->GetNext();	// 次オブジェクト
+
+				if (pObjCheck->GetLabel() == CObject::LABEL_GROUND)
+				{ // オブジェクトラベルが地盤ではない場合
+
+					D3DXVECTOR3 posBlock = pObjCheck->GetVec3Position();	// 敵位置
+					CGround* pGround = (CGround*)pObjCheck;
+					
+					if (collision::Circle2D(GetVec3Position(), posBlock, 50.0f, 50.0f) == true)
+					{
+						pGround->DelColor(0.005f);
+					}
+				}
+
+				// 次のオブジェクトへのポインタを代入
+				pObjCheck = pObjectNext;
+			}
+		}
+	}
 
 	switch (m_state)
 	{ // 状態ごとの処理
@@ -760,9 +795,9 @@ void CPlayer::UpdateBullet(void)
 		CBullet* pBullet = CBullet::Create();
 		pBullet->SetVec3Position(GetVec3Position());
 		pBullet->SetMove(D3DXVECTOR3(
-			-cosf(m_RSrickRot) * 10.0f,
+			-cosf(m_RSrickRot) * 25.0f,
 			0.0f,
-			sinf(m_RSrickRot) * 10.0f
+			sinf(m_RSrickRot) * 25.0f
 		));
 	}
 }

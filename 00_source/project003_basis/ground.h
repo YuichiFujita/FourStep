@@ -38,6 +38,7 @@ public:
 
 	void SetWNumber(int nData) { m_WNumber = nData; }
 	void SetHNumber(int nData) { m_HNumber = nData; }
+	void DelColor(float Del) { m_fLife -= Del; }
 
 	// Ã“Iƒƒ“ƒoŠÖ”
 	static CGround *Create	// ¶¬
@@ -51,6 +52,7 @@ public:
 	);
 
 private:
+	float m_fLife; //‰¡”Ô†
 	int m_WNumber; //‰¡”Ô†
 	int m_HNumber; //c”Ô†
 };

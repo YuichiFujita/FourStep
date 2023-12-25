@@ -140,9 +140,12 @@ private:
 	D3DXVECTOR3	m_oldPos;		// 過去位置
 	D3DXVECTOR3	m_movePos;		// 位置移動量
 	D3DXVECTOR3	m_moveRot;		// 向き移動量
+	D3DXVECTOR3	m_AtkPos;		// 向き移動量
 	EState	m_state;			// 状態
 	int		m_nCounterState;	// 状態管理カウンター
 	bool	m_bJump;			// ジャンプ状況
+	bool	m_bAttack;			// こうげき状況
+	int	m_bAttackCounter;			// こうげき状況
 	const EType m_type;			// 種類定数
 	const SStatusInfo m_status;	// ステータス定数
 };
