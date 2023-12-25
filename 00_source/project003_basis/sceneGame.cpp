@@ -15,7 +15,6 @@
 #include "gameManager.h"
 #include "stage.h"
 #include "score.h"
-#include "pause.h"
 #include "player.h"
 #include "enemy.h"
 
@@ -29,11 +28,9 @@
 //************************************************************
 CGameManager	*CSceneGame::m_pGameManager  = nullptr;	// ゲームマネージャー
 CScore	*CSceneGame::m_pScore	= nullptr;	// タイマーマネージャー
-CPause	*CSceneGame::m_pPause	= nullptr;	// ポーズ
 
 bool CSceneGame::m_bControlCamera = false;	// カメラの操作状況
 bool CSceneGame::m_bDrawUI = true;			// UIの描画状況
-bool CSceneGame::m_bDrawPause = true;		// ポーズの描画状況
 
 //************************************************************
 //	子クラス [CSceneGame] のメンバ関数
@@ -85,16 +82,6 @@ HRESULT CSceneGame::Init(void)
 		return E_FAIL;
 	}
 
-	// ポーズの生成
-	m_pPause = CPause::Create();
-	if (m_pPause == nullptr)
-	{ // 非使用中の場合
-
-		// 失敗を返す
-		assert(false);
-		return E_FAIL;
-	}
-
 	//--------------------------------------------------------
 	//	初期設定
 	//--------------------------------------------------------
@@ -107,9 +94,6 @@ HRESULT CSceneGame::Init(void)
 
 	// UIの描画状況を設定
 	SetEnableDrawUI(m_bDrawUI);
-
-	// ポーズの描画状況を設定
-	SetEnableDrawPause(m_bDrawPause);
 
 	// BGMの再生
 	GET_MANAGER->GetSound()->Play(CSound::LABEL_BGM_GAME);
@@ -125,15 +109,6 @@ HRESULT CSceneGame::Uninit(void)
 {
 	// ゲームマネージャーの破棄
 	if (FAILED(CGameManager::Release(m_pGameManager)))
-	{ // 破棄に失敗した場合
-
-		// 失敗を返す
-		assert(false);
-		return E_FAIL;
-	}
-
-	// ポーズの破棄
-	if (FAILED(CPause::Release(m_pPause)))
 	{ // 破棄に失敗した場合
 
 		// 失敗を返す
@@ -172,8 +147,7 @@ void CSceneGame::Update(void)
 	}
 	else if (GET_INPUTKEY->IsTrigger(DIK_F4))
 	{
-		// ポーズの描画状況を反転
-		SetEnableDrawPause((!m_bDrawPause) ? true : false);
+
 	}
 	else if (GET_INPUTKEY->IsTrigger(DIK_F5))
 	{
@@ -223,37 +197,21 @@ void CSceneGame::Update(void)
 	}
 	else { assert(false); }	// 非使用中
 
-	if (m_pPause != nullptr)
-	{ // 使用中の場合
+	// シーンの更新
+	CScene::Update();
 
-		// ポーズの更新
-		m_pPause->Update();
-	}
-	else { assert(false); }	// 非使用中
-
-	if (!m_pPause->IsPause())
-	{ // ポーズ中ではない場合
-
-		// シーンの更新
-		CScene::Update();
-
-		if (m_pScore != nullptr)
-		{
-			m_pScore->Update();
-		}
+	if (m_pScore != nullptr)
+	{
+		m_pScore->Update();
 	}
 
 #if _DEBUG
 
-	else
-	{ // ポーズ中の場合
+	if (GET_MANAGER->GetCamera()->GetState() == CCamera::STATE_CONTROL)
+	{ // カメラが操作状態の場合
 
-		if (GET_MANAGER->GetCamera()->GetState() == CCamera::STATE_CONTROL)
-		{ // カメラが操作状態の場合
-
-			// カメラの更新
-			GET_MANAGER->GetCamera()->Update();
-		}
+		// カメラの更新
+		GET_MANAGER->GetCamera()->Update();
 	}
 
 #endif	// _DEBUG
@@ -287,15 +245,6 @@ CScore *CSceneGame::GetScore(void)
 }
 
 //============================================================
-//	ポーズ取得処理
-//============================================================
-CPause *CSceneGame::GetPause(void)
-{
-	// ポーズのポインタを返す
-	return m_pPause;
-}
-
-//============================================================
 //	UIの描画状況の設定処理
 //============================================================
 void CSceneGame::SetEnableDrawUI(const bool bDraw)
@@ -311,27 +260,6 @@ bool CSceneGame::IsDrawUI(void)
 {
 	// UIの描画状況を返す
 	return m_bDrawUI;
-}
-
-//============================================================
-//	ポーズの描画状況の設定処理
-//============================================================
-void CSceneGame::SetEnableDrawPause(const bool bDraw)
-{
-	// 引数のポーズの描画状況を設定
-	m_bDrawPause = bDraw;
-
-	// ポーズの描画状況を設定
-	m_pPause->SetEnableDraw(m_pPause->IsPause());
-}
-
-//============================================================
-//	ポーズの描画状況取得処理
-//============================================================
-bool CSceneGame::IsDrawPause(void)
-{
-	// ポーズの描画状況を返す
-	return m_bDrawPause;
 }
 
 //============================================================

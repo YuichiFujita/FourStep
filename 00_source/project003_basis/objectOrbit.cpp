@@ -150,19 +150,8 @@ void CObjectOrbit::Draw(void)
 
 	// ポインタを宣言
 	LPDIRECT3DDEVICE9	pDevice		= GET_DEVICE;	// デバイスのポインタ
-	CTexture			*pTexture	= GET_MANAGER->GetTexture();				// テクスチャへのポインタ
+	CTexture			*pTexture	= GET_MANAGER->GetTexture();	// テクスチャへのポインタ
 
-	if (GET_MANAGER->GetScene()->GetMode() == CScene::MODE_GAME)
-	{ // モードがゲームの場合
-
-		if (CSceneGame::GetPause()->IsPause())
-		{ // ポーズ中の場合
-
-			// 更新しない状況にする
-			bUpdate = false;
-		}
-	}
-	
 	if (m_state != STATE_NONE)
 	{ // 何もしない状態ではない場合
 

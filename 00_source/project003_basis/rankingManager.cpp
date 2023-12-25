@@ -43,8 +43,8 @@ namespace
 	// ランキングロゴ基本情報
 	namespace logo
 	{
-		const D3DXVECTOR3 POS	= D3DXVECTOR3(SCREEN_CENT.x, 115.0f, 0.0f);	// ランキングロゴ表示の位置
-		const D3DXVECTOR3 SIZE	= D3DXVECTOR3(1280.0f, 644.0f, 0.0f) * 0.3f;		// ランキングロゴ表示の大きさ
+		const D3DXVECTOR3 POS	= D3DXVECTOR3(SCREEN_CENT.x, 115.0f, 0.0f);		// ランキングロゴ表示の位置
+		const D3DXVECTOR3 SIZE	= D3DXVECTOR3(1280.0f, 644.0f, 0.0f) * 0.3f;	// ランキングロゴ表示の大きさ
 		const float SET_SCALE	= 15.0f;	// ランキングロゴ表示の初期拡大率
 		const float SUB_SCALE	= 0.65f;	// ランキングロゴ表示の拡大率減算量
 	}
