@@ -673,19 +673,6 @@ void CPlayer::UpdateMove(void)
 		m_move.z += cosf(pCamera->GetVec3Rotation().y + GET_INPUTPAD->GetPressLStickRot() + D3DX_PI * 0.5f) * MOVE;
 	}
 
-	if (GET_INPUTKEY->IsPress(DIK_W) == false && GET_INPUTKEY->IsPress(DIK_A) == false && GET_INPUTKEY->IsPress(DIK_S) == false && GET_INPUTKEY->IsPress(DIK_D) == false)
-	{
-		// 変数を宣言
-		D3DXVECTOR3 vecStickL = D3DXVECTOR3((float)GET_INPUTPAD->GetPressLStickX(), (float)GET_INPUTPAD->GetPressLStickY(), 0.0f);	// スティック各軸の倒し量
-		float fStickL = sqrtf(vecStickL.x * vecStickL.x + vecStickL.y * vecStickL.y) * 0.5f;	// スティックの倒し量
-		if (0.01f < fStickL)
-		{ // デッドゾーン以上の場合
-
-			// 移動量を更新
-			m_move.x += sinf(pCamera->GetVec3Rotation().y + GET_INPUTPAD->GetPressLStickRot() + D3DX_PI * 0.5f) * MOVE;
-			m_move.z += cosf(pCamera->GetVec3Rotation().y + GET_INPUTPAD->GetPressLStickRot() + D3DX_PI * 0.5f) * MOVE;
-		}
-	}
 	// 目標向きを設定
 	m_destRot.y = atan2f(-m_move.x, -m_move.z);
 }
