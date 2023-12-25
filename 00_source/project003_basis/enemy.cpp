@@ -12,6 +12,7 @@
 #include "renderer.h"
 #include "sound.h"
 #include "enemyNormal.h"
+#include "EnemyBullet.h"
 #include "scene.h"
 #include "sceneGame.h"
 #include "score.h"
@@ -22,6 +23,8 @@
 #include "ground.h"
 #include "map.h"
 #include "gamemanager.h"
+#include "EffectModel.h"
+#include "EnemyJump.h"
 
 //************************************************************
 //	定数宣言
@@ -60,22 +63,24 @@ CEnemy::SStatusInfo CEnemy::m_aStatusInfo[CEnemy::TYPE_MAX] =	// ステータス情報
 
 	// ジャンプ敵のステータス情報
 	{
-		0.0f,	// 半径
-		0.0f,	// 縦幅
-		0.0f,	// 前進の移動量
-		0.0f,	// ジャンプ量
+		50.0f,	// 半径
+		50.0f,	// 半径
+		40.0f,	// 縦幅
+		1.0f,	// 前進の移動量
+		2.0f,	// ジャンプ量
 		0.0f,	// 攻撃範囲
-		0.0f,	// 視認の補正係数
+		0.5f,	// 視認の補正係数
 	},
 
 	// 弾発射敵のステータス情報
 	{
-		0.0f,	// 半径
-		0.0f,	// 縦幅
-		0.0f,	// 前進の移動量
-		0.0f,	// ジャンプ量
-		0.0f,	// 攻撃範囲
-		0.0f,	// 視認の補正係数
+		100.0f,	// 半径
+		50.0f,	// 半径
+		40.0f,	// 縦幅
+		0.25f,	// 前進の移動量
+		2.0f,	// ジャンプ量
+		100.0f,	// 攻撃範囲
+		0.5f,	// 視認の補正係数
 	},
 };
 int CEnemy::m_nNumAll = 0;	// 敵の総数
@@ -226,6 +231,20 @@ CEnemy *CEnemy::Create(const EType type, const D3DXVECTOR3& rPos, const D3DXVECT
 
 			// 通常敵を生成
 			pEnemy = new CEnemyNormal(type);
+
+			break;
+
+		case TYPE_BULLET:
+
+			// 通常敵を生成
+			pEnemy = new CEnemyBullet(type);
+
+			break;
+
+		case TYPE_JUMP:
+
+			// 通常敵を生成
+			pEnemy = new CEenemyJump(type);
 
 			break;
 
@@ -547,6 +566,16 @@ bool CEnemy::UpdateDeath(void)
 	// フェードインの更新
 	if (UpdateFadeIn(DEATH_SUB_ALPHA))
 	{ // 透明になった場合
+
+		for (int nCnt = 0; nCnt < 15; nCnt++)
+		{
+			int RandX = rand() % 101;
+			int RandZ = rand() % 101;
+
+			CEffectModel* pModel = CEffectModel::Create(false);
+			pModel->SetVec3Position(D3DXVECTOR3(GetVec3Position().x + (float)RandX, -500.0f, GetVec3Position().z + (float)RandZ));
+			pModel->SetMove(D3DXVECTOR3(0.0f, (float)RandX,0.0f));
+		}
 
 		// 敵を終了
 		Uninit();

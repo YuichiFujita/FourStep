@@ -114,6 +114,7 @@ private:
 	bool	m_bJump;			// ジャンプ状況
 	bool	m_bAttack;			// ジャンプ状況
 	CObjectModel* m_pAtkUI;		// 攻撃の三角UI
+	CObjectModel* m_pShadow;		// 攻撃の三角UI
 };
 
 #endif	// _PLAYER_H_
