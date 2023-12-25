@@ -76,6 +76,7 @@ private:
 
 	// ƒƒ“ƒo•Ï”
 	CModelUI *m_apValue[MAX_SCORE];	// ”’l‚Ìî•ñ
+	CModelUI *m_pLogo;		// ƒƒS‚Ìî•ñ
 	D3DXVECTOR3 m_pos;		// ˆÊ’u
 	D3DXVECTOR3 m_scale;	// ‘å‚«‚³
 	D3DXVECTOR3 m_space;	// ‹ó”’
