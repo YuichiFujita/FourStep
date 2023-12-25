@@ -13,6 +13,9 @@
 #include "sceneGame.h"
 #include "camera.h"
 #include "player.h"
+#include "map.h"
+
+CMap* CGameManager::m_pMap = nullptr;
 
 //************************************************************
 //	親クラス [CGameManager] のメンバ関数
@@ -24,6 +27,7 @@ CGameManager::CGameManager()
 {
 	// メンバ変数をクリア
 	m_state = STATE_NONE;	// 状態
+	m_pMap = nullptr;
 }
 
 //============================================================
@@ -42,6 +46,12 @@ HRESULT CGameManager::Init(void)
 	// メンバ変数を初期化
 	m_state = STATE_NORMAL;	// 状態
 
+	if (m_pMap == nullptr)
+	{
+		m_pMap = CMap::Create(VEC3_ZERO, VEC3_ZERO, D3DXVECTOR3(50.0f, 50.0f, 50.0f), VEC2_ONE, VEC2_ONE, VEC2_ONE);
+		m_pMap->Init();
+	}
+
 	// 成功を返す
 	return S_OK;
 }
@@ -51,7 +61,11 @@ HRESULT CGameManager::Init(void)
 //============================================================
 void CGameManager::Uninit(void)
 {
-
+	if (m_pMap != nullptr)
+	{
+		m_pMap->Uninit();
+		m_pMap = nullptr;
+	}
 }
 
 //============================================================
@@ -68,7 +82,7 @@ void CGameManager::Update(void)
 		break;
 
 	case STATE_NORMAL:
-
+		m_pMap->Update();
 		// 無し
 
 		break;
