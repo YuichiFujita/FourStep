@@ -840,6 +840,26 @@ void CCamera::Rotation(void)
 //============================================================
 void CCamera::UpRotation(void)
 {
+	//----------------------------------------------------
+	//	向きの更新
+	//----------------------------------------------------
+	// 目標向きを設定
+	m_aCamera[TYPE_MAIN].rot.x = m_aCamera[TYPE_MAIN].destRot.x = 2.5f;
+	m_aCamera[TYPE_MAIN].rot.y = m_aCamera[TYPE_MAIN].destRot.y = 3.14f;
+	
+	// 現在向きの更新
+	useful::Vec3NormalizeRot(m_aCamera[TYPE_MAIN].destRot);
+	useful::Vec3NormalizeRot(m_aCamera[TYPE_MAIN].rot);
+	
+	//----------------------------------------------------
+	//	距離の更新
+	//----------------------------------------------------
+	// 目標距離を設定
+	m_aCamera[TYPE_MAIN].fDis = m_aCamera[TYPE_MAIN].fDestDis = -3500.0f;
+	
+	//----------------------------------------------------
+	//	位置の更新
+	//----------------------------------------------------
 	// 向きの補正
 	useful::LimitNum(m_aCamera[TYPE_MAIN].rot.x, control::LIMIT_ROT_LOW, control::LIMIT_ROT_HIGH);
 	useful::NormalizeRot(m_aCamera[TYPE_MAIN].rot.y);

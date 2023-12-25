@@ -41,6 +41,7 @@ public:
 	void Update(void);		// 更新
 	void Draw(void);		// 描画
 	void FalseUseBlock(int WNum, int HNum) { m_bUseBlock[WNum][HNum] = false; }
+	bool GetUseBlock(int WNum, int HNum) { return m_bUseBlock[WNum][HNum]; }
 
 	// 静的メンバ関数
 	static CMap* Create	// 生成

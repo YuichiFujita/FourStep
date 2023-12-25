@@ -82,7 +82,7 @@ void CMap::Update(void)
 					if (Rand >= 98)
 					{
 						nCntEnemy++;
-						CEnemy::Create(CEnemy::TYPE_NORMAL, D3DXVECTOR3(-1000.0f + nCntW * 110.0f, 0.0f, -1000.0f + nCntH * 110.0f), VEC3_ZERO);
+						CEnemy::Create(CEnemy::TYPE_NORMAL, D3DXVECTOR3(-1000.0f + nCntW * 110.0f, 100.0f, -1000.0f + nCntH * 110.0f), VEC3_ZERO);
 					}
 				}
 			}

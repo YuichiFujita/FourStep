@@ -62,6 +62,7 @@ public:
 	// ステータス構造体
 	struct SStatusInfo
 	{
+		float fFloorRadius;			// 床半径
 		float fRadius;			// 半径
 		float fHeight;			// 縦幅
 		float fForwardMove;		// 前進の移動量
