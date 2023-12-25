@@ -130,10 +130,10 @@ HRESULT CCamera::Init(void)
 	//	メインカメラの初期化
 	//--------------------------------------------------------
 	// カメラ情報を初期化
-	m_aCamera[TYPE_MAIN].posV		= VEC3_ZERO;		// 現在の視点
-	m_aCamera[TYPE_MAIN].posR		= VEC3_ZERO;		// 現在の注視点
-	m_aCamera[TYPE_MAIN].destPosV	= VEC3_ZERO;		// 目標の視点
-	m_aCamera[TYPE_MAIN].destPosR	= VEC3_ZERO;		// 目標の注視点
+	m_aCamera[TYPE_MAIN].posV		= D3DXVECTOR3(0.0f,0.0f,-300.0f);		// 現在の視点
+	m_aCamera[TYPE_MAIN].posR		= D3DXVECTOR3(0.0f, 0.0f, -300.0f);		// 現在の注視点
+	m_aCamera[TYPE_MAIN].destPosV	= D3DXVECTOR3(0.0f, 0.0f, -300.0f);		// 目標の視点
+	m_aCamera[TYPE_MAIN].destPosR	= D3DXVECTOR3(0.0f, 0.0f, -300.0f);		// 目標の注視点
 	m_aCamera[TYPE_MAIN].vecU		= basic::INIT_VECU;	// 上方向ベクトル
 	m_aCamera[TYPE_MAIN].rot		= VEC3_ZERO;		// 現在の向き
 	m_aCamera[TYPE_MAIN].destRot	= VEC3_ZERO;		// 目標の向き
