@@ -31,16 +31,16 @@ public:
 	};
 
 	// コンストラクタ
-	CEnemyNormal(const EType type);
+	explicit CEnemyNormal(const EType type);
 
 	// デストラクタ
-	~CEnemyNormal();
+	~CEnemyNormal() override;
 
 	// オーバーライド関数
-	HRESULT Init(void);	// 初期化
-	void Uninit(void);	// 終了
-	void Update(void);	// 更新
-	void Draw(void);	// 描画
+	HRESULT Init(void) override;	// 初期化
+	void Uninit(void) override;		// 終了
+	void Update(void) override;		// 更新
+	void Draw(void) override;		// 描画
 
 private:
 	// 静的メンバ変数

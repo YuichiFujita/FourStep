@@ -12,20 +12,60 @@
 #include "manager.h"
 #include "renderer.h"
 #include "enemyNormal.h"
+#include "scene.h"
+#include "player.h"
+#include "collision.h"
 
 //************************************************************
 //	定数宣言
 //************************************************************
 namespace
 {
-	const int PRIORITY = 3;			// 敵の優先順位
-	const int DAMAGE_FRAME = 12;	// ダメージ状態フレーム数
+	const int	PRIORITY = 3;		// 敵の優先順位
+	const int	DAMAGE_FRAME = 12;	// ダメージ状態フレーム数
+
+	const float	GRAVITY		= 1.0f;		// 重力
+	const float	REV_MOVE	= 0.16f;	// 通常状態時の空中の移動量の減衰係数
+
+	const float	SPAWN_ADD_ALPHA = 0.0075f;	// スポーン時の透明度の加算量
+	const float	DEATH_SUB_ALPHA = 0.05f;	// 死亡時の透明度の減算量
 }
 
 //************************************************************
 //	静的メンバ変数宣言
 //************************************************************
-CEnemy::StatusInfo CEnemy::m_aStatusInfo[CEnemy::TYPE_MAX] = {};	// ステータス情報
+CEnemy::SStatusInfo CEnemy::m_aStatusInfo[CEnemy::TYPE_MAX] =	// ステータス情報
+{
+	// 通常敵のステータス情報
+	{
+		40.0f,	// 半径
+		40.0f,	// 縦幅
+		2.0f,	// 前進の移動量
+		2.0f,	// ジャンプ量
+		100.0f,	// 攻撃範囲
+		0.5f,	// 視認の補正係数
+	},
+
+	// ジャンプ敵のステータス情報
+	{
+		0.0f,	// 半径
+		0.0f,	// 縦幅
+		0.0f,	// 前進の移動量
+		0.0f,	// ジャンプ量
+		0.0f,	// 攻撃範囲
+		0.0f,	// 視認の補正係数
+	},
+
+	// 弾発射敵のステータス情報
+	{
+		0.0f,	// 半径
+		0.0f,	// 縦幅
+		0.0f,	// 前進の移動量
+		0.0f,	// ジャンプ量
+		0.0f,	// 攻撃範囲
+		0.0f,	// 視認の補正係数
+	},
+};
 int CEnemy::m_nNumAll = 0;	// 敵の総数
 
 //************************************************************
@@ -258,7 +298,7 @@ void CEnemy::RandomSpawn
 //============================================================
 //	ステータス情報取得処理
 //============================================================
-CEnemy::StatusInfo CEnemy::GetStatusInfo(const int nType)
+CEnemy::SStatusInfo CEnemy::GetStatusInfo(const int nType)
 {
 	// 引数の種類のステータス情報を返す
 	return m_aStatusInfo[nType];
@@ -403,24 +443,30 @@ float CEnemy::GetHeight(void) const
 //============================================================
 //	ステータス情報取得処理
 //============================================================
-CEnemy::StatusInfo CEnemy::GetStatusInfo(void) const
+CEnemy::SStatusInfo CEnemy::GetStatusInfo(void) const
 {
 	// ステータス情報を返す
 	return m_status;
 }
 
 //============================================================
-//	スポーン動作
+//	スポーン状態時の更新
 //============================================================
-void CEnemy::Spawn(void)
+void CEnemy::UpdateSpawn(void)
 {
+	// フェードアウトの更新
+	if (UpdateFadeOut(SPAWN_ADD_ALPHA))
+	{ // 不透明になった場合
 
+		// 通常状態にする
+		m_state = STATE_NORMAL;
+	}
 }
 
 //============================================================
-//	ダメージ動作
+//	吹っ飛び状態時の更新
 //============================================================
-void CEnemy::Damage(void)
+void CEnemy::UpdateKnock(void)
 {
 	if (m_nCounterState < DAMAGE_FRAME)
 	{ // カウンターが一定値より小さい場合
@@ -440,23 +486,92 @@ void CEnemy::Damage(void)
 		// マテリアル再設定
 		ResetMaterial();
 
-		// 状態を設定
-		m_state = STATE_NORMAL;	// 通常状態
+		// 通常状態にする
+		m_state = STATE_NORMAL;
 	}
 }
 
 //============================================================
-//	死亡動作
+//	死亡状態時の更新
 //============================================================
-bool CEnemy::Death(void)
+bool CEnemy::UpdateDeath(void)
 {
-	return true;
+	// フェードインの更新
+	if (UpdateFadeIn(DEATH_SUB_ALPHA))
+	{ // 透明になった場合
+
+		// 敵を終了
+		Uninit();
+
+		// 死亡を返す
+		return true;
+	}
+
+	// 非死亡を返す
+	return false;
+}
+
+//============================================================
+//	敵動作の更新処理
+//============================================================
+void CEnemy::UpdateAction(void)
+{
+	// ポインタを宣言
+	CPlayer *pPlayer = CScene::GetPlayer();	// プレイヤー情報
+	assert(pPlayer != nullptr);
+
+	// 変数を宣言
+	SStatusInfo  status = GetStatusInfo();				// 敵ステータス
+	D3DXVECTOR3 posEnemy = GetVec3Position();			// 敵位置
+	D3DXVECTOR3 moveEnemy = GetMovePosition();			// 敵移動量
+	D3DXVECTOR3 rotEnemy = GetVec3Rotation();			// 敵向き
+	D3DXVECTOR3 posLook = pPlayer->GetVec3Position();	// プレイヤー位置
+	float fPlayerRadius = pPlayer->GetRadius();			// プレイヤー半径
+
+	// 過去位置の更新
+	UpdateOldPosition();
+
+	// 視認対象の攻撃判定
+	if (!collision::Circle2D(posLook, posEnemy, fPlayerRadius, status.fAttackRadius))
+	{ // 敵の攻撃範囲外の場合
+
+		// 対象の方向を向かせる
+		Look(posLook, posEnemy, &rotEnemy);
+
+		// 対象の方向に移動 (前進)
+		moveEnemy.x -= sinf(rotEnemy.y) * status.fForwardMove;
+		moveEnemy.z -= cosf(rotEnemy.y) * status.fForwardMove;
+
+		// 重力を加算
+		//moveEnemy.y -= GRAVITY;
+
+		// 移動量を加算
+		posEnemy += moveEnemy;
+
+		// 移動量を減衰
+		moveEnemy.x += (0.0f - moveEnemy.x) * REV_MOVE;
+		moveEnemy.z += (0.0f - moveEnemy.z) * REV_MOVE;
+	}
+	else
+	{ // 敵の攻撃範囲内の場合
+
+
+	}
+
+	// 位置を反映
+	SetVec3Position(posEnemy);
+
+	// 位置移動量を反映
+	SetMovePosition(moveEnemy);
+
+	// 向きを反映
+	SetVec3Rotation(rotEnemy);
 }
 
 //============================================================
 //	対象視認処理
 //============================================================
-void CEnemy::Look(const D3DXVECTOR3& rPosLook, const D3DXVECTOR3& rPosEnemy, D3DXVECTOR3& rRotEnemy)
+void CEnemy::Look(const D3DXVECTOR3& rPosLook, const D3DXVECTOR3& rPosEnemy, D3DXVECTOR3 *pRotEnemy)
 {
 	// 変数を宣言
 	float fDestRot = 0.0f;	// 目標向き
@@ -466,11 +581,75 @@ void CEnemy::Look(const D3DXVECTOR3& rPosLook, const D3DXVECTOR3& rPosEnemy, D3D
 	fDestRot = atan2f(rPosEnemy.x - rPosLook.x, rPosEnemy.z - rPosLook.z);	// 目標向き
 
 	// 差分向きを求める
-	fDiffRot = fDestRot - rRotEnemy.y;
+	fDiffRot = fDestRot - pRotEnemy->y;
 	useful::NormalizeRot(fDiffRot);		// 差分向きの正規化
 
 	// 向きの更新
-	rRotEnemy.y += fDiffRot * m_status.fLookRev;
-	useful::NormalizeRot(rRotEnemy.y);	// 向きの正規化
+	pRotEnemy->y += fDiffRot * m_status.fLookRev;
+	useful::NormalizeRot(pRotEnemy->y);	// 向きの正規化
+}
+
+//============================================================
+//	フェードアウト状態時の更新処理
+//============================================================
+bool CEnemy::UpdateFadeOut(const float fAdd)
+{
+	// 変数を宣言
+	bool bAlpha = false;		// 透明状況
+	float fAlpha = GetAlpha();	// 透明度
+
+	// プレイヤー自身の描画を再開
+	CObject::SetEnableDraw(true);
+
+	// 透明度を上げる
+	fAlpha += fAdd;
+
+	if (fAlpha >= GetMaxAlpha())
+	{ // 透明度が上がり切った場合
+
+		// 透明度を補正
+		fAlpha = GetMaxAlpha();
+
+		// 不透明になり切った状態にする
+		bAlpha = true;
+	}
+
+	// 透明度を設定
+	SetAlpha(fAlpha);
+
+	// 透明状況を返す
+	return bAlpha;
+}
+
+//============================================================
+//	フェードイン状態時の更新処理
+//============================================================
+bool CEnemy::UpdateFadeIn(const float fSub)
+{
+	// 変数を宣言
+	bool bAlpha = false;		// 透明状況
+	float fAlpha = GetAlpha();	// 透明度
+
+	// 透明度を下げる
+	fAlpha -= fSub;
+
+	if (fAlpha <= 0.0f)
+	{ // 透明度が下がり切った場合
+
+		// 透明度を補正
+		fAlpha = 0.0f;
+
+		// 透明になり切った状態にする
+		bAlpha = true;
+
+		// プレイヤー自身の描画を停止
+		CObject::SetEnableDraw(false);
+	}
+
+	// 透明度を設定
+	SetAlpha(fAlpha);
+
+	// 透明状況を返す
+	return bAlpha;
 }
 #endif
