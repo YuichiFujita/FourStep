@@ -17,77 +17,34 @@
 #include "texture.h"
 #include "collision.h"
 #include "fade.h"
-
-#include "multiModel.h"
-#include "objectOrbit.h"
-#include "shadow.h"
-#include "object2D.h"
-#include "timerManager.h"
-#include "rankingManager.h"
 #include "stage.h"
-#include "field.h"
-
-#include "effect3D.h"
-#include "particle3D.h"
 
 //************************************************************
 //	定数宣言
 //************************************************************
 namespace
 {
-	const char* SETUP_TXT = "data\\TXT\\player.txt";	// プレイヤーセットアップテキスト
-
 	const int PRIORITY = 3;	// プレイヤーの優先順位
 
-	// プレイヤー基本情報
-	namespace basic
-	{
-		const float	MOVE		= 2.8f;		// 移動量
-		const float	JUMP		= 21.0f;	// ジャンプ上昇量
-		const float	GRAVITY		= 1.0f;		// 重力
-		const float	RADIUS		= 20.0f;	// 半径
-		const float	HEIGHT		= 100.0f;	// 縦幅
-		const float	REV_ROTA	= 0.15f;	// 向き変更の補正係数
-		const float	ADD_MOVE	= 0.08f;	// 非アクション時の速度加算量
+	const float	MOVE		= 2.8f;		// 移動量
+	const float	JUMP		= 21.0f;	// ジャンプ上昇量
+	const float	GRAVITY		= 1.0f;		// 重力
+	const float	RADIUS		= 20.0f;	// 半径
+	const float	HEIGHT		= 100.0f;	// 縦幅
+	const float	REV_ROTA	= 0.15f;	// 向き変更の補正係数
+	const float	ADD_MOVE	= 0.08f;	// 非アクション時の速度加算量
+	const float	JUMP_REV	= 0.16f;	// 通常状態時の空中の移動量の減衰係数
+	const float	LAND_REV	= 0.16f;	// 通常状態時の地上の移動量の減衰係数
 
-		const float	JUMP_REV	= 0.16f;	// 通常状態時の空中の移動量の減衰係数
-		const float	LAND_REV	= 0.16f;	// 通常状態時の地上の移動量の減衰係数
-		const float	SPAWN_ADD_ALPHA	= 0.03f;	// スポーン状態時の透明度の加算量
-
-		const D3DXVECTOR3 DMG_ADDROT = D3DXVECTOR3(0.04f, 0.0f, -0.02f);	// ダメージ状態時のプレイヤー回転量
-	}
-
-	// プレイヤー他クラス情報
-	namespace other
-	{
-		const D3DXVECTOR3 SHADOW_SIZE = D3DXVECTOR3(80.0f, 0.0f, 80.0f);	// 影の大きさ
-	}
+	const float	SPAWN_ADD_ALPHA	= 0.03f;	// スポーン状態時の透明度の加算量
 }
 
 //************************************************************
 //	静的メンバ変数宣言
 //************************************************************
-const char *CPlayer::mc_apTextureFile[] =	// テクスチャ定数
-{
-	"data\\TEXTURE\\clear000.png",	// クリア表示テクスチャ
-};
 const char *CPlayer::mc_apModelFile[] =	// モデル定数
 {
-	"data\\MODEL\\PLAYER\\00_waist.x",	// 腰
-	"data\\MODEL\\PLAYER\\01_body.x",	// 体
-	"data\\MODEL\\PLAYER\\02_head.x",	// 頭
-	"data\\MODEL\\PLAYER\\03_armUL.x",	// 左上腕
-	"data\\MODEL\\PLAYER\\04_armUR.x",	// 右上腕
-	"data\\MODEL\\PLAYER\\05_armDL.x",	// 左下腕
-	"data\\MODEL\\PLAYER\\06_armDR.x",	// 右下腕
-	"data\\MODEL\\PLAYER\\07_handL.x",	// 左手
-	"data\\MODEL\\PLAYER\\08_handR.x",	// 右手
-	"data\\MODEL\\PLAYER\\09_legUL.x",	// 左太もも
-	"data\\MODEL\\PLAYER\\10_legUR.x",	// 右太もも
-	"data\\MODEL\\PLAYER\\11_legDL.x",	// 左脛
-	"data\\MODEL\\PLAYER\\12_legDR.x",	// 右脛
-	"data\\MODEL\\PLAYER\\13_footL.x",	// 左足
-	"data\\MODEL\\PLAYER\\14_footR.x",	// 右足
+	"data\\MODEL\\PLAYER\\escapekun.x",	// プレイヤー
 };
 
 //************************************************************
@@ -96,16 +53,15 @@ const char *CPlayer::mc_apModelFile[] =	// モデル定数
 //============================================================
 //	コンストラクタ
 //============================================================
-CPlayer::CPlayer() : CObjectChara(CObject::LABEL_PLAYER, PRIORITY)
+CPlayer::CPlayer() : CObjectModel(CObject::LABEL_PLAYER, PRIORITY)
 {
 	// メンバ変数をクリア
-	m_pShadow			= nullptr;			// 影の情報
-	m_oldPos			= VEC3_ZERO;	// 過去位置
-	m_move				= VEC3_ZERO;	// 移動量
-	m_destRot			= VEC3_ZERO;	// 目標向き
-	m_state				= STATE_NONE;	// 状態
-	m_nCounterState		= 0;			// 状態管理カウンター
-	m_bJump				= false;		// ジャンプ状況
+	m_oldPos		= VEC3_ZERO;	// 過去位置
+	m_move			= VEC3_ZERO;	// 移動量
+	m_destRot		= VEC3_ZERO;	// 目標向き
+	m_state			= STATE_NONE;	// 状態
+	m_nCounterState	= 0;			// 状態管理カウンター
+	m_bJump			= false;		// ジャンプ状況
 }
 
 //============================================================
@@ -122,16 +78,15 @@ CPlayer::~CPlayer()
 HRESULT CPlayer::Init(void)
 {
 	// メンバ変数を初期化
-	m_pShadow			= nullptr;			// 影の情報
-	m_oldPos			= VEC3_ZERO;	// 過去位置
-	m_move				= VEC3_ZERO;	// 移動量
-	m_destRot			= VEC3_ZERO;	// 目標向き
-	m_state				= STATE_NONE;	// 状態
-	m_nCounterState		= 0;			// 状態管理カウンター
-	m_bJump				= true;			// ジャンプ状況
+	m_oldPos		= VEC3_ZERO;	// 過去位置
+	m_move			= VEC3_ZERO;	// 移動量
+	m_destRot		= VEC3_ZERO;	// 目標向き
+	m_state			= STATE_NONE;	// 状態
+	m_nCounterState	= 0;			// 状態管理カウンター
+	m_bJump			= true;			// ジャンプ状況
 
-	// オブジェクトキャラクターの初期化
-	if (FAILED(CObjectChara::Init()))
+	// オブジェクトモデルの初期化
+	if (FAILED(CObjectModel::Init()))
 	{ // 初期化に失敗した場合
 
 		// 失敗を返す
@@ -139,21 +94,8 @@ HRESULT CPlayer::Init(void)
 		return E_FAIL;
 	}
 
-	// セットアップの読み込み
-	LoadSetup();
-
-	// モデル情報の設定
-	SetModelInfo();
-
-	// 影の生成
-	m_pShadow = CShadow::Create(CShadow::TEXTURE_NORMAL, other::SHADOW_SIZE, this);
-	if (m_pShadow == nullptr)
-	{ // 非使用中の場合
-
-		// 失敗を返す
-		assert(false);
-		return E_FAIL;
-	}
+	// モデルを読込・割当
+	BindModel(mc_apModelFile[MODEL_PLAYER]);
 
 	// 成功を返す
 	return S_OK;
@@ -164,11 +106,8 @@ HRESULT CPlayer::Init(void)
 //============================================================
 void CPlayer::Uninit(void)
 {
-	// 影の終了
-	m_pShadow->Uninit();
-
-	// オブジェクトキャラクターの終了
-	CObjectChara::Uninit();
+	// オブジェクトモデルの終了
+	CObjectModel::Uninit();
 }
 
 //============================================================
@@ -176,9 +115,6 @@ void CPlayer::Uninit(void)
 //============================================================
 void CPlayer::Update(void)
 {
-	// 変数を宣言
-	EMotion currentMotion = MOTION_IDOL;	// 現在のモーション
-
 	// 過去位置の更新
 	UpdateOldPosition();
 
@@ -190,14 +126,14 @@ void CPlayer::Update(void)
 	case STATE_SPAWN:
 
 		// スポーン状態時の更新
-		currentMotion = UpdateSpawn();
+		UpdateSpawn();
 
 		break;
 
 	case STATE_NORMAL:
 
 		// 通常状態の更新
-		currentMotion = UpdateNormal();
+		UpdateNormal();
 
 		break;
 
@@ -206,11 +142,8 @@ void CPlayer::Update(void)
 		break;
 	}
 
-	// 影の更新
-	m_pShadow->Update();
-
-	// モーション・オブジェクトキャラクターの更新
-	UpdateMotion(currentMotion);
+	// オブジェクトモデルの更新
+	CObjectModel::Update();
 }
 
 //============================================================
@@ -218,11 +151,8 @@ void CPlayer::Update(void)
 //============================================================
 void CPlayer::Draw(void)
 {
-	// オブジェクトキャラクターの描画
-	CObjectChara::Draw();
-
-	// 影の描画
-	m_pShadow->Draw();
+	// オブジェクトモデルの描画
+	CObjectModel::Draw();
 }
 
 //============================================================
@@ -288,7 +218,7 @@ int CPlayer::GetState(void) const
 float CPlayer::GetRadius(void) const
 {
 	// 半径を返す
-	return basic::RADIUS;
+	return RADIUS;
 }
 
 //============================================================
@@ -297,7 +227,7 @@ float CPlayer::GetRadius(void) const
 float CPlayer::GetHeight(void) const
 {
 	// 縦幅を返す
-	return basic::HEIGHT;
+	return HEIGHT;
 }
 
 //============================================================
@@ -306,8 +236,7 @@ float CPlayer::GetHeight(void) const
 void CPlayer::SetEnableUpdate(const bool bUpdate)
 {
 	// 引数の更新状況を設定
-	CObject::SetEnableUpdate(bUpdate);		// 自身
-	m_pShadow->SetEnableUpdate(bUpdate);	// 影
+	CObject::SetEnableUpdate(bUpdate);	// 自身
 }
 
 //============================================================
@@ -316,8 +245,7 @@ void CPlayer::SetEnableUpdate(const bool bUpdate)
 void CPlayer::SetEnableDraw(const bool bDraw)
 {
 	// 引数の描画状況を設定
-	CObject::SetEnableDraw(bDraw);		// 自身
-	m_pShadow->SetEnableDraw(bDraw);	// 影
+	CObject::SetEnableDraw(bDraw);	// 自身
 }
 
 //============================================================
@@ -348,7 +276,7 @@ D3DXMATRIX CPlayer::GetMtxWorld(void) const
 //============================================================
 //	生成処理
 //============================================================
-CPlayer *CPlayer::Create(CScene::EMode mode)
+CPlayer *CPlayer::Create(void)
 {
 	// ポインタを宣言
 	CPlayer *pPlayer = nullptr;	// プレイヤー生成用
@@ -356,44 +284,8 @@ CPlayer *CPlayer::Create(CScene::EMode mode)
 	if (pPlayer == nullptr)
 	{ // 使用されていない場合
 
-		switch (mode)
-		{ // モードごとの処理
-		case CScene::MODE_TITLE:
-
-			// 無し
-
-			break;
-
-		case CScene::MODE_TUTORIAL:
-
-			// メモリ確保
-			pPlayer = new CPlayer;	// プレイヤー
-
-			break;
-
-		case CScene::MODE_GAME:
-
-			// メモリ確保
-			pPlayer = new CPlayer;	// プレイヤー
-
-			break;
-
-		case CScene::MODE_RESULT:
-
-			// 無し
-
-			break;
-
-		case CScene::MODE_RANKING:
-
-			// 無し
-
-			break;
-
-		default:	// 例外処理
-			assert(false);
-			break;
-		}
+		// メモリ確保
+		pPlayer = new CPlayer;	// プレイヤー
 	}
 	else { assert(false); return nullptr; }	// 使用中
 
@@ -426,8 +318,7 @@ void CPlayer::SetSpawn(void)
 	D3DXVECTOR3 set = VEC3_ZERO;	// 引数設定用
 
 	// 情報を初期化
-	SetState(STATE_SPAWN);		// スポーン状態の設定
-	SetMotion(MOTION_IDOL);		// 待機モーションを設定
+	SetState(STATE_SPAWN);	// スポーン状態の設定
 
 	// カウンターを初期化
 	m_nCounterState = 0;	// 状態管理カウンター
@@ -446,10 +337,10 @@ void CPlayer::SetSpawn(void)
 	ResetMaterial();
 
 	// 透明度を透明に再設定
-	SetAlpha(0.0f);
+	SetAlpha(1.0f);
 
-	// プレイヤー自身の描画を再開
-	CObject::SetEnableDraw(true);
+	// プレイヤーの描画を再開
+	SetEnableDraw(true);
 
 	// 追従カメラの目標位置の設定
 	GET_MANAGER->GetCamera()->SetDestFollow();
@@ -461,30 +352,23 @@ void CPlayer::SetSpawn(void)
 //============================================================
 //	スポーン状態時の更新処理
 //============================================================
-CPlayer::EMotion CPlayer::UpdateSpawn(void)
+void CPlayer::UpdateSpawn(void)
 {
-	// 変数を宣言
-	EMotion currentMotion = MOTION_IDOL;	// 現在のモーション
-
 	// フェードアウト状態時の更新
-	if (UpdateFadeOut(basic::SPAWN_ADD_ALPHA))
+	if (UpdateFadeOut(SPAWN_ADD_ALPHA))
 	{ // 不透明になり切った場合
 
 		// 状態を設定
 		SetState(STATE_NORMAL);
 	}
-
-	// 現在のモーションを返す
-	return currentMotion;
 }
 
 //============================================================
 //	通常状態時の更新処理
 //============================================================
-CPlayer::EMotion CPlayer::UpdateNormal(void)
+void CPlayer::UpdateNormal(void)
 {
 	// 変数を宣言
-	EMotion currentMotion = MOTION_IDOL;		// 現在のモーション
 	D3DXVECTOR3 posPlayer = GetVec3Position();	// プレイヤー位置
 	D3DXVECTOR3 rotPlayer = GetVec3Rotation();	// プレイヤー向き
 
@@ -495,11 +379,14 @@ CPlayer::EMotion CPlayer::UpdateNormal(void)
 
 		// 処理を抜ける
 		assert(false);
-		return MOTION_IDOL;
+		return;
 	}
 
 	// 移動操作
-	currentMotion = UpdateMove();
+	UpdateMove();
+
+	// ジャンプの更新
+	UpdateJump();
 
 	// 重力の更新
 	UpdateGravity();
@@ -514,16 +401,20 @@ CPlayer::EMotion CPlayer::UpdateNormal(void)
 	UpdateRotation(rotPlayer);
 
 	// ステージ範囲外の補正
-	pStage->LimitPosition(posPlayer, basic::RADIUS);
+	pStage->LimitPosition(posPlayer, RADIUS);
+
+	// キルYとの判定
+	if (pStage->CollisionKillY(posPlayer))
+	{ // キルYより下の位置にいる場合
+
+		// TODO：ここに落下処理
+	}
 
 	// 位置を反映
 	SetVec3Position(posPlayer);
 
 	// 向きを反映
 	SetVec3Rotation(rotPlayer);
-
-	// 現在のモーションを返す
-	return currentMotion;
 }
 
 //============================================================
@@ -538,7 +429,7 @@ void CPlayer::UpdateOldPosition(void)
 //============================================================
 //	移動量・目標向きの更新処理
 //============================================================
-CPlayer::EMotion CPlayer::UpdateMove(void)
+void CPlayer::UpdateMove(void)
 {
 	// 移動量を更新
 	m_move.x += sinf(m_destRot.y + D3DX_PI) * 1.0f;
@@ -546,9 +437,26 @@ CPlayer::EMotion CPlayer::UpdateMove(void)
 
 	// 目標向きを設定
 	atan2f(m_move.x, m_move.z);
+}
 
-	// 待機モーションを返す
-	return MOTION_IDOL;
+//============================================================
+//	ジャンプの更新処理
+//============================================================
+void CPlayer::UpdateJump(void)
+{
+	if (!m_bJump)
+	{ // ジャンプしていない場合
+
+		if (GET_INPUTKEY->IsTrigger(DIK_SPACE))
+		{ // ジャンプ操作が行われた場合
+
+			// ジャンプフラグをONにする
+			m_bJump = true;
+
+			// 上移動量を加算
+			m_move.y += JUMP;
+		}
+	}
 }
 
 //============================================================
@@ -557,7 +465,7 @@ CPlayer::EMotion CPlayer::UpdateMove(void)
 void CPlayer::UpdateGravity(void)
 {
 	// 重力を加算
-	m_move.y -= basic::GRAVITY;
+	m_move.y -= GRAVITY;
 }
 
 //============================================================
@@ -599,14 +507,14 @@ void CPlayer::UpdatePosition(D3DXVECTOR3& rPos)
 	if (m_bJump)
 	{ // 空中の場合
 
-		m_move.x += (0.0f - m_move.x) * basic::JUMP_REV;
-		m_move.z += (0.0f - m_move.z) * basic::JUMP_REV;
+		m_move.x += (0.0f - m_move.x) * JUMP_REV;
+		m_move.z += (0.0f - m_move.z) * JUMP_REV;
 	}
 	else
 	{ // 地上の場合
 
-		m_move.x += (0.0f - m_move.x) * basic::LAND_REV;
-		m_move.z += (0.0f - m_move.z) * basic::LAND_REV;
+		m_move.x += (0.0f - m_move.x) * LAND_REV;
+		m_move.z += (0.0f - m_move.z) * LAND_REV;
 	}
 }
 
@@ -628,37 +536,10 @@ void CPlayer::UpdateRotation(D3DXVECTOR3& rRot)
 	useful::NormalizeRot(fDiffRot);
 
 	// 向きの更新
-	rRot.y += fDiffRot * basic::REV_ROTA;
+	rRot.y += fDiffRot * REV_ROTA;
 
 	// 向きの正規化
 	useful::NormalizeRot(rRot.y);
-}
-
-//============================================================
-//	モーション・オブジェクトキャラクターの更新処理
-//============================================================
-void CPlayer::UpdateMotion(int nMotion)
-{
-	// 変数を宣言
-	int nAnimMotion = GetMotionType();	// 現在再生中のモーション
-
-	if (nMotion != NONE_IDX)
-	{ // モーションが設定されている場合
-
-		if (IsMotionLoop(nAnimMotion))
-		{ // ループするモーションだった場合
-
-			if (nAnimMotion != nMotion)
-			{ // 現在のモーションが再生中のモーションと一致しない場合
-
-				// 現在のモーションの設定
-				SetMotion(nMotion);
-			}
-		}
-	}
-
-	// オブジェクトキャラクターの更新
-	CObjectChara::Update();
 }
 
 //============================================================
@@ -723,207 +604,4 @@ bool CPlayer::UpdateFadeIn(const float fSub)
 
 	// 透明状況を返す
 	return bAlpha;
-}
-
-//============================================================
-//	セットアップ処理
-//============================================================
-void CPlayer::LoadSetup(void)
-{
-	// 変数を宣言
-	CMotion::SMotionInfo info;		// ポーズの代入用
-	D3DXVECTOR3 pos = VEC3_ZERO;	// 位置の代入用
-	D3DXVECTOR3 rot = VEC3_ZERO;	// 向きの代入用
-	int nID			= 0;	// インデックスの代入用
-	int nParentID	= 0;	// 親インデックスの代入用
-	int nNowPose	= 0;	// 現在のポーズ番号
-	int nNowKey		= 0;	// 現在のキー番号
-	int nLoop		= 0;	// ループのON/OFFの変換用
-	int nEnd		= 0;	// テキスト読み込み終了の確認用
-
-	// 変数配列を宣言
-	char aString[MAX_STRING];	// テキストの文字列の代入用
-
-	// ポインタを宣言
-	FILE *pFile;	// ファイルポインタ
-
-	// ポーズ代入用の変数を初期化
-	memset(&info, 0, sizeof(info));
-
-	// ファイルを読み込み形式で開く
-	pFile = fopen(SETUP_TXT, "r");
-
-	if (pFile != nullptr)
-	{ // ファイルが開けた場合
-
-		do
-		{ // 読み込んだ文字列が EOF ではない場合ループ
-
-			// ファイルから文字列を読み込む
-			nEnd = fscanf(pFile, "%s", &aString[0]);	// テキストを読み込みきったら EOF を返す
-
-			// キャラクターの設定
-			if (strcmp(&aString[0], "CHARACTERSET") == 0)
-			{ // 読み込んだ文字列が CHARACTERSET の場合
-
-				do
-				{ // 読み込んだ文字列が END_CHARACTERSET ではない場合ループ
-
-					// ファイルから文字列を読み込む
-					fscanf(pFile, "%s", &aString[0]);
-
-					if (strcmp(&aString[0], "PARTSSET") == 0)
-					{ // 読み込んだ文字列が PARTSSET の場合
-
-						do
-						{ // 読み込んだ文字列が END_PARTSSET ではない場合ループ
-
-							// ファイルから文字列を読み込む
-							fscanf(pFile, "%s", &aString[0]);
-
-							if (strcmp(&aString[0], "INDEX") == 0)
-							{ // 読み込んだ文字列が INDEX の場合
-
-								fscanf(pFile, "%s", &aString[0]);	// = を読み込む (不要)
-								fscanf(pFile, "%d", &nID);			// モデルのインデックスを読み込む
-							}
-							else if (strcmp(&aString[0], "PARENT") == 0)
-							{ // 読み込んだ文字列が PARENT の場合
-
-								fscanf(pFile, "%s", &aString[0]);	// = を読み込む (不要)
-								fscanf(pFile, "%d", &nParentID);	// モデルの親のインデックスを読み込む
-							}
-							else if (strcmp(&aString[0], "POS") == 0)
-							{ // 読み込んだ文字列が POS の場合
-
-								fscanf(pFile, "%s", &aString[0]);	// = を読み込む (不要)
-								fscanf(pFile, "%f", &pos.x);		// X座標を読み込む
-								fscanf(pFile, "%f", &pos.y);		// Y座標を読み込む
-								fscanf(pFile, "%f", &pos.z);		// Z座標を読み込む
-							}
-							else if (strcmp(&aString[0], "ROT") == 0)
-							{ // 読み込んだ文字列が ROT の場合
-
-								fscanf(pFile, "%s", &aString[0]);	// = を読み込む (不要)
-								fscanf(pFile, "%f", &rot.x);		// X向きを読み込む
-								fscanf(pFile, "%f", &rot.y);		// Y向きを読み込む
-								fscanf(pFile, "%f", &rot.z);		// Z向きを読み込む
-							}
-						} while (strcmp(&aString[0], "END_PARTSSET") != 0);	// 読み込んだ文字列が END_PARTSSET ではない場合ループ
-
-						// パーツ情報の設定
-						CObjectChara::SetPartsInfo(nID, nParentID, pos, rot, mc_apModelFile[nID]);
-					}
-				} while (strcmp(&aString[0], "END_CHARACTERSET") != 0);		// 読み込んだ文字列が END_CHARACTERSET ではない場合ループ
-			}
-
-			// モーションの設定
-			else if (strcmp(&aString[0], "MOTIONSET") == 0)
-			{ // 読み込んだ文字列が MOTIONSET の場合
-
-				// 現在のポーズ番号を初期化
-				nNowPose = 0;
-
-				do
-				{ // 読み込んだ文字列が END_MOTIONSET ではない場合ループ
-
-					// ファイルから文字列を読み込む
-					fscanf(pFile, "%s", &aString[0]);
-
-					if (strcmp(&aString[0], "LOOP") == 0)
-					{ // 読み込んだ文字列が LOOP の場合
-
-						fscanf(pFile, "%s", &aString[0]);	// = を読み込む (不要)
-						fscanf(pFile, "%d", &nLoop);		// ループのON/OFFを読み込む
-
-						// 読み込んだ値をbool型に変換
-						info.bLoop = (nLoop == 0) ? false : true;
-					}
-					else if (strcmp(&aString[0], "NUM_KEY") == 0)
-					{ // 読み込んだ文字列が NUM_KEY の場合
-
-						fscanf(pFile, "%s", &aString[0]);	// = を読み込む (不要)
-						fscanf(pFile, "%d", &info.nNumKey);	// キーの総数を読み込む
-					}
-					else if (strcmp(&aString[0], "KEYSET") == 0)
-					{ // 読み込んだ文字列が KEYSET の場合
-
-						// 現在のキー番号を初期化
-						nNowKey = 0;
-
-						do
-						{ // 読み込んだ文字列が END_KEYSET ではない場合ループ
-
-							// ファイルから文字列を読み込む
-							fscanf(pFile, "%s", &aString[0]);
-
-							if (strcmp(&aString[0], "FRAME") == 0)
-							{ // 読み込んだ文字列が FRAME の場合
-
-								fscanf(pFile, "%s", &aString[0]);						// = を読み込む (不要)
-								fscanf(pFile, "%d", &info.aKeyInfo[nNowPose].nFrame);	// キーが切り替わるまでのフレーム数を読み込む
-							}
-							else if (strcmp(&aString[0], "KEY") == 0)
-							{ // 読み込んだ文字列が KEY の場合
-
-								do
-								{ // 読み込んだ文字列が END_KEY ではない場合ループ
-
-									// ファイルから文字列を読み込む
-									fscanf(pFile, "%s", &aString[0]);
-
-									if (strcmp(&aString[0], "POS") == 0)
-									{ // 読み込んだ文字列が POS の場合
-
-										fscanf(pFile, "%s", &aString[0]);									// = を読み込む (不要)
-										fscanf(pFile, "%f", &info.aKeyInfo[nNowPose].aKey[nNowKey].pos.x);	// X位置を読み込む
-										fscanf(pFile, "%f", &info.aKeyInfo[nNowPose].aKey[nNowKey].pos.y);	// Y位置を読み込む
-										fscanf(pFile, "%f", &info.aKeyInfo[nNowPose].aKey[nNowKey].pos.z);	// Z位置を読み込む
-
-										// 読み込んだ位置にパーツの初期位置を加算
-										info.aKeyInfo[nNowPose].aKey[nNowKey].pos += GetPartsPosition(nNowKey);
-									}
-									else if (strcmp(&aString[0], "ROT") == 0)
-									{ // 読み込んだ文字列が ROT の場合
-
-										fscanf(pFile, "%s", &aString[0]);									// = を読み込む (不要)
-										fscanf(pFile, "%f", &info.aKeyInfo[nNowPose].aKey[nNowKey].rot.x);	// X向きを読み込む
-										fscanf(pFile, "%f", &info.aKeyInfo[nNowPose].aKey[nNowKey].rot.y);	// Y向きを読み込む
-										fscanf(pFile, "%f", &info.aKeyInfo[nNowPose].aKey[nNowKey].rot.z);	// Z向きを読み込む
-
-										// 読み込んだ向きにパーツの初期向きを加算
-										info.aKeyInfo[nNowPose].aKey[nNowKey].rot += GetPartsRotation(nNowKey);
-
-										// 初期向きを正規化
-										useful::NormalizeRot(info.aKeyInfo[nNowPose].aKey[nNowKey].rot.x);
-										useful::NormalizeRot(info.aKeyInfo[nNowPose].aKey[nNowKey].rot.y);
-										useful::NormalizeRot(info.aKeyInfo[nNowPose].aKey[nNowKey].rot.z);
-									}
-
-								} while (strcmp(&aString[0], "END_KEY") != 0);	// 読み込んだ文字列が END_KEY ではない場合ループ
-
-								// 現在のキー番号を加算
-								nNowKey++;
-							}
-						} while (strcmp(&aString[0], "END_KEYSET") != 0);	// 読み込んだ文字列が END_KEYSET ではない場合ループ
-
-						// 現在のポーズ番号を加算
-						nNowPose++;
-					}
-				} while (strcmp(&aString[0], "END_MOTIONSET") != 0);	// 読み込んだ文字列が END_MOTIONSET ではない場合ループ
-
-				// モーション情報の設定
-				CObjectChara::SetMotionInfo(info);
-			}
-		} while (nEnd != EOF);	// 読み込んだ文字列が EOF ではない場合ループ
-		
-		// ファイルを閉じる
-		fclose(pFile);
-	}
-	else
-	{ // ファイルが開けなかった場合
-
-		// エラーメッセージボックス
-		MessageBox(nullptr, "プレイヤーセットアップファイルの読み込みに失敗！", "警告！", MB_ICONWARNING);
-	}
 }

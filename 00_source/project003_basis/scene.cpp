@@ -63,7 +63,7 @@ HRESULT CScene::Init(void)
 	}
 
 	// プレイヤーオブジェクトの生成
-	m_pPlayer = CPlayer::Create(m_mode);
+	m_pPlayer = CPlayer::Create();
 
 	// 成功を返す
 	return S_OK;
