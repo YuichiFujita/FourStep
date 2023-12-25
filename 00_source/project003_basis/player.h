@@ -13,48 +13,20 @@
 //************************************************************
 //	インクルードファイル
 //************************************************************
-#include "objectChara.h"
-#include "scene.h"
-#include "retentionManager.h"
-
-//************************************************************
-//	前方宣言
-//************************************************************
-class CShadow;	// 影クラス
+#include "objectModel.h"
 
 //************************************************************
 //	クラス定義
 //************************************************************
 // プレイヤークラス
-class CPlayer : public CObjectChara
+class CPlayer : public CObjectModel
 {
 public:
 	// モデル列挙
 	enum EModel
 	{
-		MODEL_WAIST = 0,	// 腰
-		MODEL_BODY,			// 体
-		MODEL_HEAD,			// 頭
-		MODEL_ARMUL,		// 左上腕
-		MODEL_ARMUR,		// 右上腕
-		MODEL_ARMDL,		// 左下腕
-		MODEL_ARMDR,		// 右下腕
-		MODEL_HANDL,		// 左手
-		MODEL_HANDR,		// 右手
-		MODEL_LEGUL,		// 左太もも
-		MODEL_LEGUR,		// 右太もも
-		MODEL_LEGDL,		// 左脛
-		MODEL_LEGDR,		// 右脛
-		MODEL_FOOTL,		// 左足
-		MODEL_FOOTR,		// 右足
+		MODEL_PLAYER = 0,	// プレイヤー
 		MODEL_MAX			// この列挙型の総数
-	};
-
-	// モーション列挙
-	enum EMotion
-	{
-		MOTION_IDOL = 0,	// 待機モーション
-		MOTION_MAX			// この列挙型の総数
 	};
 
 	// 状態列挙
@@ -89,33 +61,30 @@ public:
 	D3DXMATRIX GetMtxWorld(void) const override;		// マトリックス取得
 
 	// 静的メンバ関数
-	static CPlayer *Create(CScene::EMode mode);	// 生成
+	static CPlayer *Create(void);	// 生成
 
 	// メンバ関数
 	void SetSpawn(void);	// 出現設定
 
 private:
 	// メンバ関数
-	void LoadSetup(void);		// セットアップ
-	EMotion UpdateSpawn(void);	// スポーン状態時の更新
-	EMotion UpdateNormal(void);	// 通常状態時の更新
+	void UpdateSpawn(void);		// スポーン状態時の更新
+	void UpdateNormal(void);	// 通常状態時の更新
 
 	void UpdateOldPosition(void);			// 過去位置の更新
-	EMotion UpdateMove(void);				// 移動量・目標向きの更新
+	void UpdateMove(void);					// 移動量・目標向きの更新
+	void UpdateJump(void);					// ジャンプの更新
 	void UpdateGravity(void);				// 重力の更新
 	bool UpdateLanding(D3DXVECTOR3& rPos);	// 着地状況の更新
 	void UpdatePosition(D3DXVECTOR3& rPos);	// 位置の更新
 	void UpdateRotation(D3DXVECTOR3& rRot);	// 向きの更新
-	void UpdateMotion(int nMotion);			// モーション・オブジェクトキャラクターの更新
 	bool UpdateFadeOut(const float fAdd);	// フェードアウト状態時の更新
 	bool UpdateFadeIn(const float fSub);	// フェードイン状態時の更新
 
 	// 静的メンバ変数
-	static const char *mc_apTextureFile[];	// テクスチャ定数
 	static const char *mc_apModelFile[];	// モデル定数
 
 	// メンバ変数
-	CShadow *m_pShadow;			// 影の情報
 	D3DXVECTOR3	m_oldPos;		// 過去位置
 	D3DXVECTOR3	m_move;			// 移動量
 	D3DXVECTOR3	m_destRot;		// 目標向き
