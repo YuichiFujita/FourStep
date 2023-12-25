@@ -718,17 +718,21 @@ void CPlayer::UpdateAttack(void)
 				while (pObjCheck != NULL)
 				{ // オブジェクトが使用されている場合繰り返す
 
-					// 変数を宣言
-					D3DXVECTOR3 posEnemy = VEC3_ZERO;	// 敵位置
-
 					// ポインタを宣言
 					CObject* pObjectNext = pObjCheck->GetNext();	// 次オブジェクト
+
 					if (pObjCheck->GetLabel() == CObject::LABEL_ENEMY)
 					{ // オブジェクトラベルが地盤ではない場合
 
-						if (collision::Sector(GetVec3Position(), pObjCheck->GetVec3Position(), m_RSrickRot + D3DX_PI * -0.5f, 200.0f, D3DX_PI) == true)
+						D3DXVECTOR3 posEnemy = pObjCheck->GetVec3Position();	// 敵位置
+
+						if (collision::Sector(GetVec3Position(), posEnemy, m_RSrickRot + D3DX_PI * -0.5f, 200.0f, D3DX_PI) == true)
 						{
-							pObjCheck->Uninit();
+							D3DXVECTOR3 vecKnock = posEnemy - GetVec3Position();	// ノックバックベクトル
+							D3DXVec3Normalize(&vecKnock, &vecKnock);	// 正規化
+
+							// プレイヤーのヒット処理
+							pObjCheck->HitKnockBack(0, vecKnock);
 						}
 					}
 

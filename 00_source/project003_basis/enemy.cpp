@@ -28,7 +28,7 @@ namespace
 	const float	GRAVITY		= 1.0f;		// 重力
 	const float	JUMP_REV	= 0.16f;	// 空中の移動量の減衰係数
 	const float	LAND_REV	= 0.16f;	// 地上の移動量の減衰係数
-	const float	KNOCK_REV	= 0.45f;	// 吹っ飛び状態時の移動量の減衰係数
+	const float	KNOCK_REV	= 0.045f;	// 吹っ飛び状態時の移動量の減衰係数
 	const float	KNOCK_UP	= 15.0f;	// ノック上昇量
 	const float	KNOCK_SIDE	= 35.0f;	// ノック横移動量
 
@@ -144,6 +144,8 @@ void CEnemy::Update(void)
 {
 	// オブジェクトモデルの更新
 	CObjectModel::Update();
+
+	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "敵位置：%f %f %f", GetVec3Position().x, GetVec3Position().y, GetVec3Position().z);
 }
 
 //============================================================
