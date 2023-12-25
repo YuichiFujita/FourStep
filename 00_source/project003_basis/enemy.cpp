@@ -20,6 +20,8 @@
 #include "collision.h"
 #include "effect3D.h"
 #include "ground.h"
+#include "map.h"
+#include "gamemanager.h"
 
 //************************************************************
 //	定数宣言
@@ -47,6 +49,7 @@ CEnemy::SStatusInfo CEnemy::m_aStatusInfo[CEnemy::TYPE_MAX] =	// ステータス情報
 {
 	// 通常敵のステータス情報
 	{
+		100.0f,	// 半径
 		50.0f,	// 半径
 		40.0f,	// 縦幅
 		0.5f,	// 前進の移動量
@@ -87,7 +90,7 @@ CEnemy::CEnemy(const EType type) : CObjectModel(CObject::LABEL_ENEMY, PRIORITY),
 {
 	// メンバ変数をクリア
 	m_oldPos	= VEC3_ZERO;	// 過去位置
-	m_movePos	= VEC3_ZERO;	// 位置移動量
+	m_movePos	= D3DXVECTOR3(0.0f,100.0f,0.0f);	// 位置移動量
 	m_moveRot	= VEC3_ZERO;	// 向き変更量
 	m_AtkPos = VEC3_ZERO;
 	m_state		= STATE_SPAWN;	// 状態
@@ -828,8 +831,8 @@ bool CEnemy::UpdateFadeIn(const float fSub)
 bool CEnemy::ResponseSingleGround(const EAxis axis, D3DXVECTOR3& rPos)
 {
 	// 変数を宣言
-	D3DXVECTOR3 sizeMinPlayer = D3DXVECTOR3(m_status.fRadius, 0.0f,				m_status.fRadius);	// 敵の最小大きさ
-	D3DXVECTOR3 sizeMaxPlayer = D3DXVECTOR3(m_status.fRadius, m_status.fHeight, m_status.fRadius);	// 敵の最大大きさ
+	D3DXVECTOR3 sizeMinPlayer = D3DXVECTOR3(m_status.fFloorRadius, 0.0f,				m_status.fFloorRadius);	// 敵の最小大きさ
+	D3DXVECTOR3 sizeMaxPlayer = D3DXVECTOR3(m_status.fFloorRadius, m_status.fHeight, m_status.fFloorRadius);	// 敵の最大大きさ
 	bool bMin = false;	// 不の方向の判定状況
 	bool bMax = false;	// 正の方向の判定状況
 	bool bHit = false;	// 着地の判定情報
