@@ -412,6 +412,9 @@ void CPlayer::UpdateNormal(void)
 		return;
 	}
 
+	// マテリアル再設定
+	ResetMaterial();
+
 	// 移動操作
 	UpdateMove();
 
@@ -467,6 +470,9 @@ void CPlayer::UpdateKnock(void)
 	CStage *pStage = CScene::GetStage();	// ステージ情報
 	assert(pStage != nullptr);
 
+	// マテリアルを全設定
+	SetAllMaterial(material::Red());	// 赤
+
 	// 重力の更新
 	UpdateGravity();
 
@@ -490,6 +496,9 @@ void CPlayer::UpdateKnock(void)
 
 		// 死亡状態にする
 		m_state = STATE_DEATH;
+
+		// マテリアル再設定
+		ResetMaterial();
 	}
 
 	// 位置を反映

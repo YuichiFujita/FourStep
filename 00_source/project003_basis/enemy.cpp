@@ -450,9 +450,6 @@ CEnemy::SStatusInfo CEnemy::GetStatusInfo(void) const
 //============================================================
 void CEnemy::UpdateSpawn(void)
 {
-	// マテリアル再設定
-	ResetMaterial();
-
 	// フェードアウトの更新
 	if (UpdateFadeOut(SPAWN_ADD_ALPHA))
 	{ // 不透明になった場合
@@ -497,6 +494,9 @@ void CEnemy::UpdateKnock(void)
 
 		// 死亡状態にする
 		m_state = STATE_DEATH;
+
+		// マテリアル再設定
+		ResetMaterial();
 	}
 
 	// 位置を反映
@@ -510,9 +510,6 @@ bool CEnemy::UpdateDeath(void)
 {
 	// 変数を宣言
 	D3DXVECTOR3 posEnemy = GetVec3Position();	// 敵位置
-
-	// マテリアル再設定
-	ResetMaterial();
 
 	// 過去位置の更新
 	UpdateOldPosition();
@@ -570,20 +567,24 @@ void CEnemy::UpdateAction(void)
 	m_movePos.y -= GRAVITY;
 
 	// 視認対象の攻撃判定
-	if (!collision::Circle2D(posLook, posEnemy, fPlayerRadius, status.fAttackRadius))
-	{ // 敵の攻撃範囲外の場合
+	if (pPlayer->GetState() != CPlayer::STATE_DEATH)
+	{ // プレイヤーが死んでいない場合
 
-		// 対象の方向を向かせる
-		UpdateLook(posLook, posEnemy, &rotEnemy);
+		if (!collision::Circle2D(posLook, posEnemy, fPlayerRadius, status.fAttackRadius))
+		{ // 敵の攻撃範囲外の場合
 
-		// 対象の方向に移動 (前進)
-		m_movePos.x -= sinf(rotEnemy.y) * status.fForwardMove;
-		m_movePos.z -= cosf(rotEnemy.y) * status.fForwardMove;
-	}
-	else
-	{ // 敵の攻撃範囲内の場合
+			// 対象の方向を向かせる
+			UpdateLook(posLook, posEnemy, &rotEnemy);
+
+			// 対象の方向に移動 (前進)
+			m_movePos.x -= sinf(rotEnemy.y) * status.fForwardMove;
+			m_movePos.z -= cosf(rotEnemy.y) * status.fForwardMove;
+		}
+		else
+		{ // 敵の攻撃範囲内の場合
 
 
+		}
 	}
 
 	// 着地状況の更新
