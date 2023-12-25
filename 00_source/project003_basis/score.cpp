@@ -46,7 +46,7 @@ namespace
 //============================================================
 //	コンストラクタ
 //============================================================
-CScore::CScore() : CObject(CObject::LABEL_UI, SCORE_PRIO)
+CScore::CScore() : CObject(CObject::LABEL_NONE, SCORE_PRIO)
 {
 	// メンバ変数をクリア
 	memset(&m_apValue[0], 0, sizeof(m_apValue));	// 数値の情報
@@ -91,6 +91,9 @@ HRESULT CScore::Init(void)
 
 		// 優先順位を設定
 		m_apValue[nCntScore]->SetPriority(SCORE_PRIO);
+
+		// 数字の設定
+		m_apValue[nCntScore]->BindModel(MODEL_FILE[0]);
 	}
 
 	// 成功を返す

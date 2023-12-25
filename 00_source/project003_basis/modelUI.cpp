@@ -87,6 +87,9 @@ void CModelUI::Draw(void)
 	// 現在のビューポートを取得
 	pDevice->GetViewport(&viewportDef);
 
+	// ライティングを無効にする
+	pDevice->SetRenderState(D3DRS_LIGHTING, FALSE);
+
 	// カメラの設定
 	GET_MANAGER->GetCamera()->SetCamera(CCamera::TYPE_MODELUI);
 
@@ -95,6 +98,9 @@ void CModelUI::Draw(void)
 
 	// カメラの設定を元に戻す
 	GET_MANAGER->GetCamera()->SetCamera(CCamera::TYPE_MAIN);
+
+	// ライティングを有効にする
+	pDevice->SetRenderState(D3DRS_LIGHTING, TRUE);
 
 	// ビューポートを元に戻す
 	pDevice->SetViewport(&viewportDef);

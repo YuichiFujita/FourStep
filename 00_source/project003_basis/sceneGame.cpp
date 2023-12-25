@@ -14,6 +14,7 @@
 
 #include "gameManager.h"
 #include "stage.h"
+#include "score.h"
 #include "pause.h"
 #include "player.h"
 #include "enemy.h"
@@ -27,8 +28,8 @@
 //	静的メンバ変数宣言
 //************************************************************
 CGameManager	*CSceneGame::m_pGameManager  = nullptr;	// ゲームマネージャー
-CTimerManager	*CSceneGame::m_pTimerManager = nullptr;	// タイマーマネージャー
-CPause	*CSceneGame::m_pPause	= nullptr;					// ポーズ
+CScore	*CSceneGame::m_pScore	= nullptr;	// タイマーマネージャー
+CPause	*CSceneGame::m_pPause	= nullptr;	// ポーズ
 
 bool CSceneGame::m_bControlCamera = false;	// カメラの操作状況
 bool CSceneGame::m_bDrawUI = true;			// UIの描画状況
@@ -61,6 +62,16 @@ HRESULT CSceneGame::Init(void)
 	//--------------------------------------------------------
 	//	初期生成
 	//--------------------------------------------------------
+	// スコアの生成
+	m_pScore = CScore::Create(D3DXVECTOR3(790.0f, 430.0f, 0.0f), VEC3_ONE, D3DXVECTOR3(140.0f, 0.0f, 0.0f));
+	if (m_pScore == nullptr)
+	{ // 非使用中の場合
+
+		// 失敗を返す
+		assert(false);
+		return E_FAIL;
+	}
+
 	// シーンの初期化
 	CScene::Init();		// ステージ・プレイヤーの生成
 
@@ -130,6 +141,11 @@ HRESULT CSceneGame::Uninit(void)
 		return E_FAIL;
 	}
 
+	if (m_pScore != nullptr)
+	{
+		m_pScore->Uninit();
+	}
+
 	// シーンの終了
 	CScene::Uninit();
 
@@ -174,6 +190,11 @@ void CSceneGame::Update(void)
 		// TODO：後で消すエネミー生成
 		CEnemy::Create(CEnemy::TYPE_NORMAL, VEC3_ZERO, VEC3_ZERO);
 	}
+	else if (GET_INPUTKEY->IsPress(DIK_F8))
+	{
+		// TODO：後で消すスコア上昇
+		m_pScore->Add(1);
+	}
 
 	// デバッグ表示
 	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "======================================\n");
@@ -186,6 +207,7 @@ void CSceneGame::Update(void)
 	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "[F5]：カメラ操作のON/OFF\n");
 	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "[F6]：プレイヤースポーン\n");
 	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "[F7]：敵出るよ～ん\n");
+	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "[F8]：スコア加算～\n");
 
 	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "======================================\n");
 	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "　[デバッグ情報]\n");
@@ -217,6 +239,11 @@ void CSceneGame::Update(void)
 
 			// シーンの更新
 			CScene::Update();
+
+			if (m_pScore != nullptr)
+			{
+				m_pScore->Update();
+			}
 		}
 
 #if _DEBUG
@@ -257,10 +284,10 @@ CGameManager *CSceneGame::GetGameManager(void)
 //============================================================
 //	タイマーマネージャー取得処理
 //============================================================
-CTimerManager *CSceneGame::GetTimerManager(void)
+CScore *CSceneGame::GetScore(void)
 {
-	// タイマーマネージャーのポインタを返す
-	return m_pTimerManager;
+	// スコアのポインタを返す
+	return m_pScore;
 }
 
 //============================================================
