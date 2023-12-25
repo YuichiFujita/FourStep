@@ -34,6 +34,9 @@ const CSound::SSoundInfo CSound::mc_aSoundInfo[LABEL_MAX] =	// サウンド情報
 	{ "data\\SE\\stick000.wav",  0 },		// くっつき音
 	{ "data\\SE\\hit000.wav",  0 },			// ぶつかり音
 	{ "data\\SE\\kiru.wav",  0 },			// きる音
+	{ "data\\SE\\shot.wav",  0 },			// 撃つ音
+	{ "data\\SE\\fall.wav",  0 },			// 落ちる音
+	{ "data\\SE\\fly000.wav",  0 },			// ジャンプ音
 };
 
 //************************************************************

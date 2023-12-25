@@ -538,6 +538,9 @@ void CPlayer::UpdateNormal(void)
 		{
 			m_pAtkUI->SetEnableDraw(false);
 		}
+
+		// サウンドの再生
+		GET_MANAGER->GetSound()->Play(CSound::LABEL_SE_FALL);	// 生成音
 	}
 
 	if (m_bAttack == false)
@@ -603,6 +606,9 @@ void CPlayer::UpdateKnock(void)
 
 		// マテリアル再設定
 		ResetMaterial();
+
+		// サウンドの再生
+		GET_MANAGER->GetSound()->Play(CSound::LABEL_SE_FALL);	// 生成音
 	}
 
 	// 位置を反映
@@ -743,6 +749,9 @@ void CPlayer::UpdateJump(void)
 
 			// 上移動量を加算
 			m_move.y += JUMP;
+
+			// サウンドの再生
+			GET_MANAGER->GetSound()->Play(CSound::LABEL_SE_FLY);	// 生成音
 		}
 	}
 }
@@ -771,6 +780,9 @@ void CPlayer::UpdateAttack(void)
 			pStick->SetVec3Rotation(D3DXVECTOR3(0.0f, m_RSrickRot, 0.0f));
 			pStick->SetVec3Position(GetVec3Position());
 			m_bAttack = true;
+
+			// サウンドの再生
+			GET_MANAGER->GetSound()->Play(CSound::LABEL_SE_SLASH);	// 生成音
 		}
 
 		if (m_pShadow != nullptr)
@@ -872,6 +884,9 @@ void CPlayer::UpdateBullet(void)
 			0.0f,
 			sinf(m_RSrickRot) * 25.0f
 		));
+
+		// サウンドの再生
+		GET_MANAGER->GetSound()->Play(CSound::LABEL_SE_SHOT);	// 生成音
 	}
 }
 
