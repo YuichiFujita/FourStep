@@ -164,6 +164,7 @@
     <ClCompile Include="fade.cpp" />
     <ClCompile Include="field.cpp" />
     <ClCompile Include="gameManager.cpp" />
+    <ClCompile Include="ground.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="light.cpp" />
     <ClCompile Include="liquid.cpp" />
@@ -236,6 +237,7 @@
     <ClInclude Include="fade.h" />
     <ClInclude Include="field.h" />
     <ClInclude Include="gameManager.h" />
+    <ClInclude Include="ground.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="light.h" />
     <ClInclude Include="liquid.h" />

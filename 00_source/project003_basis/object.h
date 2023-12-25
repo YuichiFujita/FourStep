@@ -74,6 +74,7 @@ public:
 		LABEL_EFFECT,		// エフェクト
 		LABEL_PARTICLE,		// パーティクル
 		LABEL_PLAYER,		// プレイヤー
+		LABEL_GROUND,		// 地盤
 		LABEL_FIELD,		// 地面
 		LABEL_WALL,			// 壁
 		LABEL_SCENERY,		// 景色
