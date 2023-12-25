@@ -44,7 +44,7 @@ namespace
 	namespace logo
 	{
 		const D3DXVECTOR3 POS	= D3DXVECTOR3(SCREEN_CENT.x, 115.0f, 0.0f);	// ランキングロゴ表示の位置
-		const D3DXVECTOR3 SIZE	= D3DXVECTOR3(473.0f, 199.0f, 0.0f);		// ランキングロゴ表示の大きさ
+		const D3DXVECTOR3 SIZE	= D3DXVECTOR3(1280.0f, 644.0f, 0.0f) * 0.3f;		// ランキングロゴ表示の大きさ
 		const float SET_SCALE	= 15.0f;	// ランキングロゴ表示の初期拡大率
 		const float SUB_SCALE	= 0.65f;	// ランキングロゴ表示の拡大率減算量
 	}
@@ -52,7 +52,7 @@ namespace
 	// 順位基本情報
 	namespace rank
 	{
-		const D3DXVECTOR3	POS		= D3DXVECTOR3(310.0f, 250.0f, 0.0f);	// 順位表示の位置
+		const D3DXVECTOR3	POS		= D3DXVECTOR3(490.0f, 250.0f, 0.0f);	// 順位表示の位置
 		const D3DXVECTOR3	SIZE	= D3DXVECTOR3(183.0f, 108.0f, 0.0f);	// 順位表示の大きさ
 		const D3DXVECTOR3	SPACE	= D3DXVECTOR3(0.0f, 100.0f, 0.0f);		// 順位表示の空白
 
@@ -65,7 +65,7 @@ namespace
 	// クリアタイム基本情報
 	namespace time
 	{
-		const D3DXVECTOR3 POS			= D3DXVECTOR3(485.0f, 250.0f, 0.0f);	// クリアタイム表示の位置
+		const D3DXVECTOR3 POS			= D3DXVECTOR3(665.0f, 250.0f, 0.0f);	// クリアタイム表示の位置
 		const D3DXVECTOR3 SPACE			= D3DXVECTOR3(0.0f, 100.0f, 0.0f);		// クリアタイム表示の空白
 		const D3DXVECTOR3 SIZE_VAL		= D3DXVECTOR3(88.0f, 105.0f, 0.0f);		// クリアタイム表示の数字大きさ
 		const D3DXVECTOR3 SIZE_PART		= D3DXVECTOR3(45.0f, 105.0f, 0.0f);		// クリアタイム表示の区切り大きさ
