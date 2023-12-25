@@ -22,13 +22,12 @@ class CObject2D;	// オブジェクト2Dクラス
 class CTitleManager
 {
 public:
-	// ロゴ列挙
-	enum ELogo
+	// テクスチャ列挙
+	enum ETexture
 	{
-		LOGO_NEVER = 0,	// NEVERロゴ
-		LOGO_GIVE,		// GIVEロゴ
-		LOGO_UP,		// UP!ロゴ
-		LOGO_MAX		// この列挙型の総数
+		TEXTURE_BG = 0,	// 背景テクスチャ
+		TEXTURE_LOGO,	// タイトルテクスチャ
+		TEXTURE_MAX		// この列挙型の総数
 	};
 
 	// 選択列挙
@@ -73,14 +72,15 @@ private:
 	void SkipStaging(void);	// 演出スキップ
 
 	// 静的メンバ変数
-	static const char *mc_apLogoTextureFile[];		// ロゴテクスチャ定数
+	static const char *mc_apTextureFile[];			// テクスチャ定数
 	static const char *mc_apSelectTextureFile[];	// 選択テクスチャ定数
 
 	// メンバ変数
-	CObject2D *m_apLogo[LOGO_MAX];		// タイトル表示の情報
 	CObject2D *m_apSelect[SELECT_MAX];	// 選択表示の情報
+	CObject2D *m_pLogo;		// タイトル表示の情報
 	CObject2D *m_pFade;		// フェードの情報
 	CObject2D *m_pSelectBG;	// 選択背景の情報
+	CObject2D *m_pBG;	// 背景の情報
 	EState m_state;		// 状態
 	float m_fScale;		// タイトル拡大率
 	int m_nSelect;		// 現在の選択
