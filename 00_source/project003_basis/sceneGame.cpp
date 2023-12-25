@@ -17,6 +17,7 @@
 #include "stage.h"
 #include "pause.h"
 #include "player.h"
+#include "enemy.h"
 
 //************************************************************
 //	マクロ定義
@@ -104,6 +105,9 @@ HRESULT CSceneGame::Init(void)
 
 	// シーンの初期化
 	CScene::Init();		// ステージ・プレイヤーの生成
+
+	// TODO：後で消すエネミー生成
+	CEnemy::Create(CEnemy::TYPE_NORMAL, VEC3_ZERO, VEC3_ZERO);
 
 	// ゲームマネージャーの生成
 	m_pGameManager = CGameManager::Create();
