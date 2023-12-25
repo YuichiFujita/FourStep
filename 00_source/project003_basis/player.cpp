@@ -688,7 +688,7 @@ void CPlayer::UpdateAttack(void)
 	if (m_bAttack == false)
 	{
 		if (GET_INPUTKEY->IsTrigger(DIK_Y) ||
-			GET_INPUTPAD->IsTrigger(GET_INPUTPAD->KEY_Y))
+			GET_INPUTPAD->IsTrigger(GET_INPUTPAD->KEY_L1))
 		{ // ‘€ì‚ªs‚í‚ê‚½ê‡
 			CStick* pStick = CStick::Create();
 			pStick->SetVec3Rotation(D3DXVECTOR3(0.0f, m_RSrickRot, 0.0f));
@@ -750,7 +750,7 @@ void CPlayer::UpdateAttack(void)
 void CPlayer::UpdateBullet(void)
 {
 	if (GET_INPUTKEY->IsTrigger(DIK_B) ||
-		GET_INPUTPAD->IsTrigger(GET_INPUTPAD->KEY_B))
+		GET_INPUTPAD->IsTrigger(GET_INPUTPAD->KEY_R1))
 	{ // ‘€ì‚ªs‚í‚ê‚½ê‡
 
 		CBullet* pBullet = CBullet::Create();
