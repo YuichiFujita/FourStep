@@ -40,6 +40,7 @@ public:
 	void Uninit(void);		// 終了
 	void Update(void);		// 更新
 	void Draw(void);		// 描画
+	void FalseUseBlock(int WNum, int HNum) { m_bUseBlock[WNum][HNum] = false; }
 
 	// 静的メンバ関数
 	static CMap* Create	// 生成

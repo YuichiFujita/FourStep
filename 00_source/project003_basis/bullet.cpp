@@ -81,7 +81,7 @@ HRESULT CBullet::Init(void)
 	}
 
 	// ƒ‚ƒfƒ‹‚ğ“ÇEŠ„“–
-	BindModel("data\\MODEL\\BULLET\\1225_pl_003.x");
+	BindModel("data\\MODEL\\BULLET\\plryer_bullrt.x");
 
 	// ¬Œ÷‚ğ•Ô‚·
 	return S_OK;
