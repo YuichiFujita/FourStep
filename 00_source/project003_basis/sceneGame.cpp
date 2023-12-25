@@ -223,45 +223,41 @@ void CSceneGame::Update(void)
 	}
 	else { assert(false); }	// 非使用中
 
-	if (m_pGameManager->GetState() == CGameManager::STATE_NORMAL)
-	{ // ゲームマネージャーが通常状態の場合
+	if (m_pPause != nullptr)
+	{ // 使用中の場合
 
-		if (m_pPause != nullptr)
-		{ // 使用中の場合
+		// ポーズの更新
+		m_pPause->Update();
+	}
+	else { assert(false); }	// 非使用中
 
-			// ポーズの更新
-			m_pPause->Update();
+	if (!m_pPause->IsPause())
+	{ // ポーズ中ではない場合
+
+		// シーンの更新
+		CScene::Update();
+
+		if (m_pScore != nullptr)
+		{
+			m_pScore->Update();
 		}
-		else { assert(false); }	// 非使用中
-
-		if (!m_pPause->IsPause())
-		{ // ポーズ中ではない場合
-
-			// シーンの更新
-			CScene::Update();
-
-			if (m_pScore != nullptr)
-			{
-				m_pScore->Update();
-			}
-		}
+	}
 
 #if _DEBUG
 
-		else
-		{ // ポーズ中の場合
+	else
+	{ // ポーズ中の場合
 
-			if (GET_MANAGER->GetCamera()->GetState() == CCamera::STATE_CONTROL)
-			{ // カメラが操作状態の場合
+		if (GET_MANAGER->GetCamera()->GetState() == CCamera::STATE_CONTROL)
+		{ // カメラが操作状態の場合
 
-				// カメラの更新
-				GET_MANAGER->GetCamera()->Update();
-			}
+			// カメラの更新
+			GET_MANAGER->GetCamera()->Update();
 		}
+	}
 
 #endif	// _DEBUG
 
-	}
 }
 
 //============================================================

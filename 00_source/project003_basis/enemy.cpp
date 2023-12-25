@@ -506,13 +506,6 @@ void CEnemy::UpdateKnock(void)
 		// Ž€–Só‘Ô‚É‚·‚é
 		m_state = STATE_DEATH;
 
-		if (GET_MANAGER->GetMode() == CScene::MODE_GAME)
-		{ // ƒQ[ƒ€ƒ‚[ƒh‚È‚ç
-
-			// ƒXƒRƒA‰ÁŽZ
-			CSceneGame::GetScore()->Add(1);
-		}
-
 		// ƒ}ƒeƒŠƒAƒ‹ÄÝ’è
 		ResetMaterial();
 	}
@@ -547,6 +540,9 @@ bool CEnemy::UpdateDeath(void)
 
 		// “G‚ðI—¹
 		Uninit();
+
+		// ƒXƒRƒA‰ÁŽZ
+		CSceneGame::GetScore()->Add(1);
 
 		// Ž€–S‚ð•Ô‚·
 		return true;

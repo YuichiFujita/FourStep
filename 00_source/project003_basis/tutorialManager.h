@@ -26,17 +26,8 @@ public:
 	enum ETexture
 	{
 		TEXTURE_CONTROL = 0,	// 操作方法テクスチャ
+		TEXTURE_END,			// 終了方法テクスチャ
 		TEXTURE_MAX				// この列挙型の総数
-	};
-
-	// 説明列挙
-	enum EExplain
-	{
-		EXPLAIN_JUMP = 0,	// ジャンプ説明テクスチャ
-		EXPLAIN_SLIDE,		// スライディング説明テクスチャ
-		EXPLAIN_WALLDASH,	// 壁走り説明テクスチャ
-		EXPLAIN_WALLJUMP,	// 壁ジャンプ説明テクスチャ
-		EXPLAIN_MAX			// この列挙型の総数
 	};
 
 	// コンストラクタ
@@ -57,7 +48,6 @@ public:
 private:
 	// 静的メンバ変数
 	static const char *mc_apTextureFile[];	// テクスチャ定数
-	static const char *mc_apLessonTextureFile[];	// レッスンテクスチャ定数
 
 	// メンバ変数
 	CObject2D *m_pExplain;	// 説明表示の情報
