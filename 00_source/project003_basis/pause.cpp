@@ -223,12 +223,6 @@ void CPause::SetEnableDraw(const bool bDraw)
 	// •Ï”‚ðéŒ¾
 	bool bDrawPause = bDraw;	// ƒ|[ƒY‚Ì•`‰æó‹µ
 
-	if (!CSceneGame::IsDrawPause())
-	{ // ƒ|[ƒY‚ð•`‰æ‚µ‚È‚¢ó‹µ‚¾‚Á‚½ê‡
-
-		bDrawPause = false;
-	}
-
 	// ”wŒiî•ñ‚Ì•`‰æó‹µ‚ðÝ’è
 	m_pBG->SetEnableDraw(bDrawPause);
 

@@ -15,7 +15,6 @@
 const CSound::SSoundInfo CSound::mc_aSoundInfo[LABEL_MAX] =	// サウンド情報
 {
 	{ "data\\BGM\\bgm_general.wav", -1 },	// BGM (汎用)
-	{ "data\\BGM\\bgm_tutorial.wav", -1 },	// BGM (チュートリアル)
 	{ "data\\BGM\\bgm_game.wav", -1 },		// BGM (ゲーム)
 
 	{ "data\\SE\\select000.wav",  0 },		// 選択操作音00
@@ -34,6 +33,7 @@ const CSound::SSoundInfo CSound::mc_aSoundInfo[LABEL_MAX] =	// サウンド情報
 	{ "data\\SE\\jumppad000.wav",  0 },		// ジャンプパッド
 	{ "data\\SE\\stick000.wav",  0 },		// くっつき音
 	{ "data\\SE\\hit000.wav",  0 },			// ぶつかり音
+	{ "data\\SE\\kiru.wav",  0 },			// きる音
 };
 
 //************************************************************

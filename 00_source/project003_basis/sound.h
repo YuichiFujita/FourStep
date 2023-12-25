@@ -27,7 +27,6 @@ public:
 	enum ELabel
 	{
 		LABEL_BGM_GENERAL = 0,	// BGM (汎用)
-		LABEL_BGM_TUTORIAL,		// BGM (チュートリアル)
 		LABEL_BGM_GAME,			// BGM (ゲーム)
 
 		LABEL_SE_SELECT_000,	// 選択操作音00
@@ -46,6 +45,7 @@ public:
 		LABEL_SE_JUMPPAD,		// ジャンプパッド
 		LABEL_SE_STICK,			// くっつき音
 		LABEL_SE_HIT,			// ぶつかり音
+		LABEL_SE_SLASH,			// きる音
 		LABEL_MAX,				// この列挙型の総数
 	};
 
