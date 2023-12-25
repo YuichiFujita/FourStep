@@ -18,12 +18,12 @@
 #------------------------------------------------------------------------------
 LIMITSET
 	CENTER = 0.00 0.00 0.00
-	NEAR = -12000.00
-	FAR = 12000.00
-	RIGHT = 12000.00
-	LEFT = -12000.00
+	NEAR = -2000.00
+	FAR = 2000.00
+	RIGHT = 2000.00
+	LEFT = -2000.00
 	FIELD = 0.00
-	KILLY = -200.00
+	KILLY = -500.00
 END_LIMITSET
 
 #------------------------------------------------------------------------------
@@ -66,37 +66,7 @@ END_STAGE_WALLSET
 STAGE_SCENERYSET
 
 	# åiêFÇÃëçêî
-	NUM = 3
-
-	SCENERYSET
-		TEXTURE_ID = 0
-		POS = 0.0 0.0 0.0
-		ROT = 0.0 0.0 0.0
-		COL = 1.0 1.0 1.0 1.0
-		PART = 14 1
-		RADIUS = 18000.0
-		HEIGHT = 800.0
-	END_SCENERYSET
-	
-	SCENERYSET
-		TEXTURE_ID = 1
-		POS = 0.0 0.0 0.0
-		ROT = 0.0 85.0 0.0
-		COL = 1.0 1.0 1.0 1.0
-		PART = 14 1
-		RADIUS = 20000.0
-		HEIGHT = 1400.0
-	END_SCENERYSET
-	
-	SCENERYSET
-		TEXTURE_ID = 2
-		POS = 0.0 0.0 0.0
-		ROT = 0.0 35.0 0.0
-		COL = 1.0 1.0 1.0 1.0
-		PART = 14 1
-		RADIUS = 22000.0
-		HEIGHT = 2000.0
-	END_SCENERYSET
+	NUM = 0
 
 END_STAGE_SCENERYSET
 
@@ -106,25 +76,7 @@ END_STAGE_SCENERYSET
 STAGE_SKYSET
 
 	# ãÛÇÃëçêî
-	NUM = 2
-
-	SKYSET
-		TEXTURE_ID = 0
-		POS = 0.0 0.0 0.0
-		ROT = 0.0 0.0 0.0
-		COL = 1.0 1.0 1.0 1.0
-    	PART = 32 6
-		RADIUS = 30000.0
-	END_SKYSET
-	
-	SKYSET
-		TEXTURE_ID = 0
-		POS = 0.0 0.0 0.0
-		ROT = 0.0 0.0 180.0
-		COL = 1.0 1.0 1.0 1.0
-    	PART = 32 6
-		RADIUS = 30000.0
-	END_SKYSET
+	NUM = 0
 
 END_STAGE_SKYSET
 
@@ -134,20 +86,6 @@ END_STAGE_SKYSET
 STAGE_LIQUIDSET
 
 	# âtëÃÇÃëçêî
-	NUM = 1
-
-	LIQUIDSET
-		TYPE = 0
-		POS = 0.0 0.0 0.0
-		ROT = 0.0 45.0 0.0
-		SIZE = 60000.0 60000.0
-		COL = 1.0 1.0 1.0 1.0
-		PART = 128 128
-		TEXMOVE_LOW = 0.002 0.0002
-		TEXMOVE_HIGH = 0.0 0.002
-		MAX_UP = 20.0
-		ADD_SINROT = 1.5
-		ADD_VTXROT = 20.0
-	END_LIQUIDSET
+	NUM = 0
 	
 END_STAGE_LIQUIDSET
