@@ -4,10 +4,11 @@
 //	Author:sakamoto kai
 //
 //============================================
-#include "bullet.h"
+#include "stick.h"
 #include "manager.h"
 #include "gamemanager.h"
-#include "collision.h"
+#include "scene.h"
+#include "player.h"
 
 //マクロ定義
 #define BLOCK_WIGHT (300.0f)		//横幅
@@ -17,15 +18,17 @@
 //====================================================================
 //コンストラクタ
 //====================================================================
-CBullet::CBullet() : CObjectModel(CObject::LABEL_PLAYER, 3)
+CStick::CStick() : CObjectModel(CObject::LABEL_PLAYER, 3)
 {
-	m_nLife = 120;
+	m_nLife = 30;
+	m_nLifeMax = m_nLife;
+	m_AtkRot = (D3DX_PI / ((float)m_nLifeMax * 0.5f));
 }
 
 //====================================================================
 //デストラクタ
 //====================================================================
-CBullet::~CBullet()
+CStick::~CStick()
 {
 
 }
@@ -33,16 +36,16 @@ CBullet::~CBullet()
 //====================================================================
 //生成処理
 //====================================================================
-CBullet* CBullet::Create()
+CStick* CStick::Create()
 {
 	// ポインタを宣言
-	CBullet* pBullet = nullptr;	// プレイヤー生成用
+	CStick* pBullet = nullptr;	// プレイヤー生成用
 
 	if (pBullet == nullptr)
 	{ // 使用されていない場合
 
 		// メモリ確保
-		pBullet = new CBullet;	// プレイヤー
+		pBullet = new CStick;	// プレイヤー
 	}
 	else { assert(false); return nullptr; }	// 使用中
 
@@ -69,7 +72,7 @@ CBullet* CBullet::Create()
 //====================================================================
 //初期化処理
 //====================================================================
-HRESULT CBullet::Init(void)
+HRESULT CStick::Init(void)
 {
 	// オブジェクトモデルの初期化
 	if (FAILED(CObjectModel::Init()))
@@ -81,7 +84,7 @@ HRESULT CBullet::Init(void)
 	}
 
 	// モデルを読込・割当
-	BindModel("data\\MODEL\\BULLET\\1225_pl_003.x");
+	BindModel("data\\MODEL\\PLAYER\\kinobou.x");
 
 	// 成功を返す
 	return S_OK;
@@ -90,7 +93,7 @@ HRESULT CBullet::Init(void)
 //====================================================================
 //終了処理
 //====================================================================
-void CBullet::Uninit(void)
+void CStick::Uninit(void)
 {
 	CObjectModel::Uninit();
 }
@@ -98,58 +101,29 @@ void CBullet::Uninit(void)
 //====================================================================
 //更新処理
 //====================================================================
-void CBullet::Update(void)
+void CStick::Update(void)
 {
-	D3DXVECTOR3 pos = GetVec3Position();
+	D3DXVECTOR3 rot = GetVec3Rotation();
 
-	pos += m_move;
-
-	for (int nCntPri = 0; nCntPri < object::MAX_PRIO; nCntPri++)
-	{ // 優先順位の総数分繰り返す
-		// ポインタを宣言
-		CObject* pObjectTop = CObject::GetTop(nCntPri);	// 先頭オブジェクト
-		if (pObjectTop != NULL)
-		{ // 先頭が存在する場合
-
-			// ポインタを宣言
-			CObject* pObjCheck = pObjectTop;	// オブジェクト確認用
-
-			while (pObjCheck != NULL)
-			{ // オブジェクトが使用されている場合繰り返す
-
-				// 変数を宣言
-				D3DXVECTOR3 posEnemy = VEC3_ZERO;	// 敵位置
-
-				// ポインタを宣言
-				CObject* pObjectNext = pObjCheck->GetNext();	// 次オブジェクト
-				if (pObjCheck->GetLabel() == CObject::LABEL_ENEMY)
-				{ // オブジェクトラベルが地盤ではない場合
-
-					if (collision::Circle3D(GetVec3Position(), pObjCheck->GetVec3Position(), 30.0f,30.0f) == true)
-					{
-						pObjCheck->Uninit();
-						Uninit();
-						return;
-					}
-				}
-
-				// 次のオブジェクトへのポインタを代入
-				pObjCheck = pObjectNext;
-			}
-		}
-	}
-
-	SetVec3Position(pos);
-
-	if (m_nLife > 0)
+	if (m_nLife > (int)((float)m_nLifeMax * 0.5f))
 	{
+		rot.y += m_AtkRot;
+		m_nLife--;
+	}
+	else if (m_nLife > 0)
+	{
+		rot.y -= m_AtkRot;
 		m_nLife--;
 	}
 	else
 	{
+		CScene::GetPlayer()->SetAttack(false);
 		Uninit();
 		return;
 	}
+
+	SetVec3Position(CScene::GetPlayer()->GetVec3Position());
+	SetVec3Rotation(rot);
 
 	//頂点情報の更新
 	CObjectModel::Update();
@@ -158,7 +132,7 @@ void CBullet::Update(void)
 //====================================================================
 //描画処理
 //====================================================================
-void CBullet::Draw(void)
+void CStick::Draw(void)
 {
 	CObjectModel::Draw();
 }

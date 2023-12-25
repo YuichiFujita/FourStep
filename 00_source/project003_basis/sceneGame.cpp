@@ -106,9 +106,6 @@ HRESULT CSceneGame::Init(void)
 	// シーンの初期化
 	CScene::Init();		// ステージ・プレイヤーの生成
 
-	// TODO：後で消すエネミー生成
-	CEnemy::Create(CEnemy::TYPE_NORMAL, VEC3_ZERO, VEC3_ZERO);
-
 	// ゲームマネージャーの生成
 	m_pGameManager = CGameManager::Create();
 	if (m_pGameManager == nullptr)
@@ -223,19 +220,11 @@ void CSceneGame::Update(void)
 		// プレイヤーの出現を設定
 		CScene::GetPlayer()->SetSpawn();
 	}
-
-#if 0
 	else if (GET_INPUTKEY->IsTrigger(DIK_F7))
 	{
-		// リザルトに遷移
-		//CScene::GetPlayer()->SetState(CPlayer::STATE_CLEAR);
+		// TODO：後で消すエネミー生成
+		CEnemy::Create(CEnemy::TYPE_NORMAL, VEC3_ZERO, VEC3_ZERO);
 	}
-	else if (GET_INPUTKEY->IsTrigger(DIK_F8))
-	{
-		// リザルトに遷移
-		//CScene::GetPlayer()->SetState(CPlayer::STATE_OVER);
-	}
-#endif
 
 	// デバッグ表示
 	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "======================================\n");
@@ -247,11 +236,7 @@ void CSceneGame::Update(void)
 	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "[F4]：ポーズ描画のON/OFF\n");
 	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "[F5]：カメラ操作のON/OFF\n");
 	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "[F6]：プレイヤースポーン\n");
-
-#if 0
-	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "[F7]：成功リザルト遷移\n");
-	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "[F8]：失敗リザルト遷移\n");
-#endif
+	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "[F7]：敵出るよ～ん\n");
 
 	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "======================================\n");
 	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "　[デバッグ情報]\n");

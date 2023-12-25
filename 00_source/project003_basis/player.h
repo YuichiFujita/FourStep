@@ -55,6 +55,8 @@ public:
 	int GetState(void) const override;			// 状態取得
 	float GetRadius(void) const override;		// 半径取得
 	float GetHeight(void) const override;		// 縦幅取得
+	void SetAttack(const bool Set) { m_bAttack = Set; }	// 状態設定
+	int GetAttack(void) { return m_bAttack; };			// 状態取得
 
 	void SetEnableUpdate(const bool bUpdate) override;	// 更新状況設定
 	void SetEnableDraw(const bool bDraw) override;		// 描画状況設定
@@ -90,10 +92,12 @@ private:
 	D3DXVECTOR3	m_oldPos;		// 過去位置
 	D3DXVECTOR3	m_move;			// 移動量
 	D3DXVECTOR3	m_destRot;		// 目標向き
-	float	m_RSrickRot;	// 右スティックの向き
+	float	m_RSrickRot;		// 右スティックの向き
 	EState	m_state;			// 状態
 	int		m_nCounterState;	// 状態管理カウンター
 	bool	m_bJump;			// ジャンプ状況
+	bool	m_bAttack;			// ジャンプ状況
+	CObjectModel* m_pAtkUI;		// 攻撃の三角UI
 };
 
 #endif	// _PLAYER_H_

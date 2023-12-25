@@ -19,6 +19,7 @@
 #include "fade.h"
 #include "stage.h"
 #include "bullet.h"
+#include "stick.h"
 
 //************************************************************
 //	定数宣言
@@ -64,6 +65,8 @@ CPlayer::CPlayer() : CObjectModel(CObject::LABEL_PLAYER, PRIORITY)
 	m_state			= STATE_NONE;	// 状態
 	m_nCounterState	= 0;			// 状態管理カウンター
 	m_bJump			= false;		// ジャンプ状況
+	m_bAttack = false;
+	m_pAtkUI = nullptr;
 }
 
 //============================================================
@@ -99,6 +102,13 @@ HRESULT CPlayer::Init(void)
 	// モデルを読込・割当
 	BindModel(mc_apModelFile[MODEL_PLAYER]);
 
+	if (m_pAtkUI == nullptr)
+	{
+		m_pAtkUI = CObjectModel::Create(VEC3_ZERO, VEC3_ZERO);
+		m_pAtkUI->CObjectModel::SetLabel(LABEL_UI);
+		m_pAtkUI->BindModel("data\\MODEL\\PLAYER\\sankakumodel.x");
+	}
+	
 	// 成功を返す
 	return S_OK;
 }
@@ -110,6 +120,12 @@ void CPlayer::Uninit(void)
 {
 	// オブジェクトモデルの終了
 	CObjectModel::Uninit();
+
+	if (m_pAtkUI != nullptr)
+	{
+		m_pAtkUI->Uninit();
+		m_pAtkUI = nullptr;
+	}
 }
 
 //============================================================
@@ -384,6 +400,16 @@ void CPlayer::UpdateNormal(void)
 		return;
 	}
 
+	// 変数を宣言
+	D3DXVECTOR3 vecStickR = D3DXVECTOR3((float)GET_INPUTPAD->GetPressRStickX(), (float)GET_INPUTPAD->GetPressRStickY(), 0.0f);	// スティック各軸の倒し量
+	float fStickR = sqrtf(vecStickR.x * vecStickR.x + vecStickR.y * vecStickR.y) * 0.5f;	// スティックの倒し量
+	if (0.8f < fStickR)
+	{ // デッドゾーン以上の場合
+
+		m_RSrickRot = GET_INPUTPAD->GetPressRStickRot();
+
+	}
+
 	// 移動操作
 	UpdateMove();
 
@@ -551,10 +577,62 @@ void CPlayer::UpdateAttack(void)
 
 	}
 
-	if (GET_INPUTKEY->IsTrigger(DIK_Y) ||
-		GET_INPUTPAD->IsTrigger(GET_INPUTPAD->KEY_Y))
-	{ // 操作が行われた場合
+	if (m_bAttack == false)
+	{
+		if (GET_INPUTKEY->IsTrigger(DIK_Y) ||
+			GET_INPUTPAD->IsTrigger(GET_INPUTPAD->KEY_Y))
+		{ // 操作が行われた場合
+			CStick* pStick = CStick::Create();
+			pStick->SetVec3Rotation(D3DXVECTOR3(0.0f, m_RSrickRot, 0.0f));
+			pStick->SetVec3Position(GetVec3Position());
+			m_bAttack = true;
+		}
 
+		if (m_pAtkUI != nullptr)
+		{
+			m_pAtkUI->SetEnableDraw(true);
+			m_pAtkUI->SetVec3Position(GetVec3Position());
+			m_pAtkUI->SetVec3Rotation(D3DXVECTOR3(0.0f, m_RSrickRot + D3DX_PI * 0.5f, 0.0f));
+		}
+	}
+	else
+	{
+		for (int nCntPri = 0; nCntPri < object::MAX_PRIO; nCntPri++)
+		{ // 優先順位の総数分繰り返す
+			// ポインタを宣言
+			CObject* pObjectTop = CObject::GetTop(nCntPri);	// 先頭オブジェクト
+			if (pObjectTop != NULL)
+			{ // 先頭が存在する場合
+
+				// ポインタを宣言
+				CObject* pObjCheck = pObjectTop;	// オブジェクト確認用
+
+				while (pObjCheck != NULL)
+				{ // オブジェクトが使用されている場合繰り返す
+
+					// 変数を宣言
+					D3DXVECTOR3 posEnemy = VEC3_ZERO;	// 敵位置
+
+					// ポインタを宣言
+					CObject* pObjectNext = pObjCheck->GetNext();	// 次オブジェクト
+					if (pObjCheck->GetLabel() == CObject::LABEL_ENEMY)
+					{ // オブジェクトラベルが地盤ではない場合
+
+						if (collision::Sector(GetVec3Position(), pObjCheck->GetVec3Position(), m_RSrickRot + D3DX_PI * -0.5f, 200.0f, D3DX_PI) == true)
+						{
+							pObjCheck->Uninit();
+						}
+					}
+
+					// 次のオブジェクトへのポインタを代入
+					pObjCheck = pObjectNext;
+				}
+			}
+		}
+		if (m_pAtkUI != nullptr)
+		{
+			m_pAtkUI->SetEnableDraw(false);
+		}
 	}
 }
 
@@ -563,16 +641,6 @@ void CPlayer::UpdateAttack(void)
 //============================================================
 void CPlayer::UpdateBullet(void)
 {
-	// 変数を宣言
-	D3DXVECTOR3 vecStickR = D3DXVECTOR3((float)GET_INPUTPAD->GetPressRStickX(), (float)GET_INPUTPAD->GetPressRStickY(), 0.0f);	// スティック各軸の倒し量
-	float fStickR = sqrtf(vecStickR.x * vecStickR.x + vecStickR.y * vecStickR.y) * 0.5f;	// スティックの倒し量
-	if (0.8f < fStickR)
-	{ // デッドゾーン以上の場合
-
-		m_RSrickRot = GET_INPUTPAD->GetPressRStickRot();
-
-	}
-
 	if (GET_INPUTKEY->IsTrigger(DIK_B) ||
 		GET_INPUTPAD->IsTrigger(GET_INPUTPAD->KEY_B))
 	{ // 操作が行われた場合

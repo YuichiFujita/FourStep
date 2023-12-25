@@ -23,7 +23,7 @@ namespace
 	namespace basic
 	{
 		const D3DXVECTOR3 INIT_VECU = D3DXVECTOR3(0.0f, 1.0f, 0.0f);	// 上方向ベクトルの初期値
-		const D3DXVECTOR3 INIT_POSV = D3DXVECTOR3(0.0f, 0.0f, -600.0f);	// 視点の初期値
+		const D3DXVECTOR3 INIT_POSV = D3DXVECTOR3(0.0f, 0.0f, -700.0f);	// 視点の初期値
 		const float VIEW_NEAR	= 10.0f;	// モデルが見えるZ軸の最小値
 		const float VIEW_FAR	= 50000.0f;	// モデルが見えるZ軸の最大値
 
@@ -35,9 +35,9 @@ namespace
 	namespace rotate
 	{
 		const D3DXVECTOR3 INIT_POSR	= D3DXVECTOR3(0.0f, 550.0f, 0.0f);	// 回転カメラの注視点の初期値
-		const D3DXVECTOR3 INIT_ROT	= D3DXVECTOR2(3.04f, 2.99f);			// 回転カメラの向き初期値
+		const D3DXVECTOR3 INIT_ROT	= D3DXVECTOR2(2.5f, 2.99f);			// 回転カメラの向き初期値
 
-		const float INIT_DIS	= -3000.0f;	// 回転カメラの距離初期値
+		const float INIT_DIS	= -3500.0f;	// 回転カメラの距離初期値
 		const float ADD_ROTY	= 0.005f;	// 回転カメラの向き加算量Y
 	}
 
@@ -812,12 +812,6 @@ void CCamera::Rotation(void)
 //============================================================
 void CCamera::UpRotation(void)
 {
-	// ポインタを宣言
-	CInputMouse* pMouse = GET_INPUTMOUSE;	// マウスの取得
-
-	// 変数を宣言
-	D3DXVECTOR3 mouseMove = pMouse->GetMove();	// マウスの移動量
-
 	// 向きの補正
 	useful::LimitNum(m_aCamera[TYPE_MAIN].rot.x, control::LIMIT_ROT_LOW, control::LIMIT_ROT_HIGH);
 	useful::NormalizeRot(m_aCamera[TYPE_MAIN].rot.y);
