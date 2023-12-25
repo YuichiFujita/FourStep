@@ -4,7 +4,7 @@
 //	Author:sakamoto kai
 //
 //============================================
-#include "bullet.h"
+#include "EffectModel.h"
 #include "manager.h"
 #include "gamemanager.h"
 #include "collision.h"
@@ -18,16 +18,16 @@
 //====================================================================
 //コンストラクタ
 //====================================================================
-CBullet::CBullet() : CObjectModel(CObject::LABEL_PLAYER, 3)
+CEffectModel::CEffectModel() : CObjectModel(CObject::LABEL_PLAYER, 3)
 {
-	m_nLife = 120;
-	m_PlayerBullet = false;
+	m_nLife = 30;
+	m_nLifeMax = m_nLife;
 }
 
 //====================================================================
 //デストラクタ
 //====================================================================
-CBullet::~CBullet()
+CEffectModel::~CEffectModel()
 {
 
 }
@@ -35,16 +35,16 @@ CBullet::~CBullet()
 //====================================================================
 //生成処理
 //====================================================================
-CBullet* CBullet::Create(bool PlayerBullet)
+CEffectModel* CEffectModel::Create(bool playerE)
 {
 	// ポインタを宣言
-	CBullet* pBullet = nullptr;	// プレイヤー生成用
+	CEffectModel* pBullet = nullptr;	// プレイヤー生成用
 
 	if (pBullet == nullptr)
 	{ // 使用されていない場合
 
 		// メモリ確保
-		pBullet = new CBullet;	// プレイヤー
+		pBullet = new CEffectModel;	// プレイヤー
 	}
 	else { assert(false); return nullptr; }	// 使用中
 
@@ -52,7 +52,7 @@ CBullet* CBullet::Create(bool PlayerBullet)
 	{ // 使用されている場合
 
 		// プレイヤーの初期化
-		if (FAILED(pBullet->Init(PlayerBullet)))
+		if (FAILED(pBullet->Init(playerE)))
 		{ // 初期化に失敗した場合
 
 			// メモリ開放
@@ -71,7 +71,7 @@ CBullet* CBullet::Create(bool PlayerBullet)
 //====================================================================
 //初期化処理
 //====================================================================
-HRESULT CBullet::Init(bool PlayerBullet)
+HRESULT CEffectModel::Init(bool playerE)
 {
 	// オブジェクトモデルの初期化
 	if (FAILED(CObjectModel::Init()))
@@ -82,18 +82,17 @@ HRESULT CBullet::Init(bool PlayerBullet)
 		return E_FAIL;
 	}
 
-	m_PlayerBullet = PlayerBullet;
-
-	if (m_PlayerBullet == true)
-	{
-		// モデルを読込・割当
-		BindModel("data\\MODEL\\BULLET\\plryer_bullrt.x");
-	}
-	else
+	if (playerE == false)
 	{
 		// モデルを読込・割当
 		BindModel("data\\MODEL\\BULLET\\enemy_bullrt.x");
 	}
+	else
+	{
+		// モデルを読込・割当
+		BindModel("data\\MODEL\\BULLET\\plryer_bullrt.x");
+	}
+
 	// 成功を返す
 	return S_OK;
 }
@@ -101,7 +100,7 @@ HRESULT CBullet::Init(bool PlayerBullet)
 //====================================================================
 //終了処理
 //====================================================================
-void CBullet::Uninit(void)
+void CEffectModel::Uninit(void)
 {
 	CObjectModel::Uninit();
 }
@@ -109,70 +108,11 @@ void CBullet::Uninit(void)
 //====================================================================
 //更新処理
 //====================================================================
-void CBullet::Update(void)
+void CEffectModel::Update(void)
 {
 	D3DXVECTOR3 pos = GetVec3Position();
 
 	pos += m_move;
-
-	for (int nCntPri = 0; nCntPri < object::MAX_PRIO; nCntPri++)
-	{ // 優先順位の総数分繰り返す
-		// ポインタを宣言
-		CObject* pObjectTop = CObject::GetTop(nCntPri);	// 先頭オブジェクト
-		if (pObjectTop != NULL)
-		{ // 先頭が存在する場合
-
-			// ポインタを宣言
-			CObject* pObjCheck = pObjectTop;	// オブジェクト確認用
-
-			while (pObjCheck != NULL)
-			{ // オブジェクトが使用されている場合繰り返す
-
-				// ポインタを宣言
-				CObject* pObjectNext = pObjCheck->GetNext();	// 次オブジェクト
-
-				if (pObjCheck->GetLabel() == CObject::LABEL_ENEMY && m_PlayerBullet == true)
-				{ // オブジェクトラベルが地盤ではない場合
-
-					D3DXVECTOR3 posEnemy = pObjCheck->GetVec3Position();	// 敵位置
-
-					if (collision::Circle3D(GetVec3Position(), posEnemy, 30.0f,50.0f) == true)
-					{
-						D3DXVECTOR3 vecKnock = posEnemy - GetVec3Position();	// ノックバックベクトル
-						D3DXVec3Normalize(&vecKnock, &vecKnock);	// 正規化
-
-						// プレイヤーのヒット処理
-						pObjCheck->HitKnockBack(0, vecKnock);
-
-						// 自身の玉の終了
-						Uninit();
-						return;
-					}
-				}
-				// 次のオブジェクトへのポインタを代入
-				pObjCheck = pObjectNext;
-			}
-		}
-	}
-
-	if (m_PlayerBullet == false)
-	{ // オブジェクトラベルが地盤ではない場合
-
-		CPlayer* pPlayer = CScene::GetPlayer();
-
-		if (collision::Circle3D(GetVec3Position(), pPlayer->GetVec3Position(), 30.0f, 50.0f) == true)
-		{
-			D3DXVECTOR3 vecKnock = pPlayer->GetVec3Position() - GetVec3Position();	// ノックバックベクトル
-			D3DXVec3Normalize(&vecKnock, &vecKnock);	// 正規化
-
-			// プレイヤーのヒット処理
-			pPlayer->HitKnockBack(0, vecKnock);
-
-			// 自身の玉の終了
-			Uninit();
-			return;
-		}
-	}
 
 	SetVec3Position(pos);
 
@@ -186,6 +126,8 @@ void CBullet::Update(void)
 		return;
 	}
 
+	SetAlpha((float)m_nLife / (float)m_nLifeMax);
+
 	//頂点情報の更新
 	CObjectModel::Update();
 }
@@ -193,7 +135,7 @@ void CBullet::Update(void)
 //====================================================================
 //描画処理
 //====================================================================
-void CBullet::Draw(void)
+void CEffectModel::Draw(void)
 {
 	CObjectModel::Draw();
 }

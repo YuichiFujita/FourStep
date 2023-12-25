@@ -22,6 +22,7 @@
 #include "enemy.h"
 #include "stick.h"
 #include "ground.h"
+#include "EffectModel.h"
 
 //************************************************************
 //	定数宣言
@@ -72,6 +73,7 @@ CPlayer::CPlayer() : CObjectModel(CObject::LABEL_PLAYER, PRIORITY)
 	m_bJump			= false;		// ジャンプ状況
 	m_bAttack = false;
 	m_pAtkUI = nullptr;
+	m_pShadow = nullptr;
 }
 
 //============================================================
@@ -112,6 +114,13 @@ HRESULT CPlayer::Init(void)
 		m_pAtkUI = CObjectModel::Create(VEC3_ZERO, VEC3_ZERO);
 		m_pAtkUI->CObjectModel::SetLabel(LABEL_UI);
 		m_pAtkUI->BindModel("data\\MODEL\\PLAYER\\sankakumodel.x");
+	}
+
+	if (m_pShadow == nullptr)
+	{
+		m_pShadow = CObjectModel::Create(VEC3_ZERO, VEC3_ZERO);
+		m_pShadow->CObjectModel::SetLabel(LABEL_UI);
+		m_pShadow->BindModel("data\\MODEL\\PLAYER\\player_shadow.x");
 	}
 
 	// 成功を返す
@@ -265,6 +274,16 @@ void CPlayer::HitKnockBack(const int nDmg, const D3DXVECTOR3 &vecKnock)
 
 	// ノック状態を設定
 	SetState(STATE_KNOCK);
+
+	if (m_pShadow != nullptr)
+	{
+		m_pShadow->SetEnableDraw(false);
+	}
+	if (m_pAtkUI != nullptr)
+	{
+		m_pAtkUI->SetEnableDraw(false);
+	}
+
 
 	// サウンドの再生
 	CManager::GetInstance()->GetSound()->Play(CSound::LABEL_SE_HIT);	// ヒット音
@@ -510,6 +529,29 @@ void CPlayer::UpdateNormal(void)
 
 		// 死亡状態にする
 		m_state = STATE_DEATH;
+
+		if (m_pShadow != nullptr)
+		{
+			m_pShadow->SetEnableDraw(false);
+		}
+		if (m_pAtkUI != nullptr)
+		{
+			m_pAtkUI->SetEnableDraw(false);
+		}
+	}
+
+	if (m_bAttack == false)
+	{
+		if (m_pAtkUI != nullptr)
+		{
+			m_pAtkUI->SetVec3Position(GetVec3Position());
+			m_pAtkUI->SetVec3Rotation(D3DXVECTOR3(0.0f, m_RSrickRot + D3DX_PI * 0.5f, 0.0f));
+		}
+	}
+
+	if (m_pShadow != nullptr)
+	{
+		m_pShadow->SetVec3Position(D3DXVECTOR3(GetVec3Position().x, 0.0f, GetVec3Position().z));
 	}
 
 	// 位置を反映
@@ -731,6 +773,11 @@ void CPlayer::UpdateAttack(void)
 			m_bAttack = true;
 		}
 
+		if (m_pShadow != nullptr)
+		{
+			m_pShadow->SetEnableDraw(true);
+		}
+
 		if (m_pAtkUI != nullptr)
 		{
 			m_pAtkUI->SetEnableDraw(true);
@@ -768,6 +815,12 @@ void CPlayer::UpdateAttack(void)
 
 							// プレイヤーのヒット処理
 							pObjCheck->HitKnockBack(0, vecKnock);
+
+
+
+							CEffectModel* pModel = CEffectModel::Create(false);
+							pModel->SetVec3Position(posEnemy);
+							pModel->SetMove(D3DXVECTOR3(0.0f, 0.0f, 0.0f));
 						}
 					}
 
@@ -792,7 +845,7 @@ void CPlayer::UpdateBullet(void)
 		GET_INPUTPAD->IsTrigger(GET_INPUTPAD->KEY_R1))
 	{ // 操作が行われた場合
 
-		CBullet* pBullet = CBullet::Create();
+		CBullet* pBullet = CBullet::Create(true);
 		pBullet->SetVec3Position(GetVec3Position());
 		pBullet->SetMove(D3DXVECTOR3(
 			-cosf(m_RSrickRot) * 25.0f,

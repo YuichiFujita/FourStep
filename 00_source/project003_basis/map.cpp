@@ -69,20 +69,60 @@ void CMap::Uninit(void)
 //============================================================
 void CMap::Update(void)
 {
-	if (nCntTime % 300 == 0)
+	if (nCntTime > 1500)
 	{
-		int nCntEnemy = 0;
-		for (int nCntW = 0; nCntW < BLOCK_WIGHT; nCntW++)
+		if (nCntTime % 300 == 0)
 		{
-			for (int nCntH = 0; nCntH < BLOCK_HEIGHT; nCntH++)
+			int nCntEnemy = 0;
+			for (int nCntW = 0; nCntW < BLOCK_WIGHT; nCntW++)
 			{
-				if (nCntEnemy < nSpwnEnemy)
+				for (int nCntH = 0; nCntH < BLOCK_HEIGHT; nCntH++)
 				{
-					int Rand = rand() % 100;
-					if (Rand >= 98)
+					if (nCntEnemy < nSpwnEnemy + 2 && m_bUseBlock[nCntW][nCntH] == true)
 					{
-						nCntEnemy++;
-						CEnemy::Create(CEnemy::TYPE_NORMAL, D3DXVECTOR3(-1000.0f + nCntW * 110.0f, 100.0f, -1000.0f + nCntH * 110.0f), VEC3_ZERO);
+						int Rand = rand() % 100;
+						if (Rand >= 99)
+						{
+							nCntEnemy++;
+							CEnemy::Create(CEnemy::TYPE_BULLET, D3DXVECTOR3(-1000.0f + nCntW * 110.0f, 0.0f, -1000.0f + nCntH * 110.0f), VEC3_ZERO);
+						}
+						else if (Rand >= 98)
+						{
+							nCntEnemy++;
+							CEnemy::Create(CEnemy::TYPE_NORMAL, D3DXVECTOR3(-1000.0f + nCntW * 110.0f, 0.0f, -1000.0f + nCntH * 110.0f), VEC3_ZERO);
+						}
+						else if (Rand >= 97)
+						{
+							nCntEnemy++;
+							CEnemy::Create(CEnemy::TYPE_JUMP, D3DXVECTOR3(-1000.0f + nCntW * 110.0f, 0.0f, -1000.0f + nCntH * 110.0f), VEC3_ZERO);
+						}
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		if (nCntTime % 300 == 0)
+		{
+			int nCntEnemy = 0;
+			for (int nCntW = 0; nCntW < BLOCK_WIGHT; nCntW++)
+			{
+				for (int nCntH = 0; nCntH < BLOCK_HEIGHT; nCntH++)
+				{
+					if (nCntEnemy < nSpwnEnemy && m_bUseBlock[nCntW][nCntH] == true)
+					{
+						int Rand = rand() % 100;
+						if (Rand >= 99)
+						{
+							nCntEnemy++;
+							CEnemy::Create(CEnemy::TYPE_JUMP, D3DXVECTOR3(-1000.0f + nCntW * 110.0f, 0.0f, -1000.0f + nCntH * 110.0f), VEC3_ZERO);
+						}
+						else if (Rand >= 98)
+						{
+							nCntEnemy++;
+							CEnemy::Create(CEnemy::TYPE_NORMAL, D3DXVECTOR3(-1000.0f + nCntW * 110.0f, 0.0f, -1000.0f + nCntH * 110.0f), VEC3_ZERO);
+						}
 					}
 				}
 			}
