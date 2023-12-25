@@ -11,6 +11,8 @@
 #include "manager.h"
 #include "renderer.h"
 #include "texture.h"
+#include "gamemanager.h"
+#include "map.h"
 
 //************************************************************
 //	マクロ定義
@@ -46,6 +48,8 @@ CGround::~CGround()
 HRESULT CGround::Init(void)
 {
 	// メンバ変数を初期化
+	m_WNumber = -1;
+	m_HNumber = -1;
 
 	// オブジェクトメッシュキューブの初期化
 	if (FAILED(CObjectMeshCube::Init()))
@@ -95,6 +99,7 @@ HRESULT CGround::Init(void)
 //============================================================
 void CGround::Uninit(void)
 {
+	CGameManager::GetMap()->FalseUseBlock(m_WNumber, m_HNumber);
 	// オブジェクトメッシュキューブの終了
 	CObjectMeshCube::Uninit();
 }

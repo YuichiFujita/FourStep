@@ -135,8 +135,10 @@ void CMap::SetGround
 	{
 		for (int nCntH = 0; nCntH < BLOCK_HEIGHT; nCntH++)
 		{
-			m_bUseBlock[nCntW][nCntH] = false;
-			CGround::Create(D3DXVECTOR3(rPos.x + nCntW * 110.0f, rPos.y, rPos.z + nCntH * 110.0f), rRot, rSize, rTexPartX, rTexPartY, rTexPartZ);
+			CGround *pGround = CGround::Create(D3DXVECTOR3(rPos.x + nCntW * 110.0f, rPos.y, rPos.z + nCntH * 110.0f), rRot, rSize, rTexPartX, rTexPartY, rTexPartZ);
+			pGround->SetWNumber(nCntW);
+			pGround->SetHNumber(nCntH);
+			m_bUseBlock[nCntW][nCntH] = true;
 		}
 	}
 }

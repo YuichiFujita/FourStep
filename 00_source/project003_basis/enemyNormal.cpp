@@ -25,7 +25,7 @@ namespace
 //************************************************************
 const char *CEnemyNormal::mc_apModelFile[] =	// ƒ‚ƒfƒ‹’è”
 {
-	"data\\MODEL\\ENEMY\\escapekun.x",	// ’Êí“G
+	"data\\MODEL\\ENEMY\\1225_en_003.x",	// ’Êí“G
 };
 
 //************************************************************

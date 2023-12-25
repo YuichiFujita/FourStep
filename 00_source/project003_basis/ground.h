@@ -36,6 +36,9 @@ public:
 	void Update(void) override;		// 更新
 	void Draw(void) override;		// 描画
 
+	void SetWNumber(int nData) { m_WNumber = nData; }
+	void SetHNumber(int nData) { m_HNumber = nData; }
+
 	// 静的メンバ関数
 	static CGround *Create	// 生成
 	( // 引数
@@ -48,6 +51,8 @@ public:
 	);
 
 private:
+	int m_WNumber; //横番号
+	int m_HNumber; //縦番号
 };
 
 #endif	// _GROUND_H_
