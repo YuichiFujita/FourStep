@@ -16,6 +16,7 @@
 #include "model.h"
 #include "object2D.h"
 #include "retentionManager.h"
+#include "multivalue.h"
 
 //************************************************************
 //	マクロ定義
@@ -27,9 +28,11 @@
 #define INITCOL_FADE	(XCOL_AWHITE)	// α値の初期値
 #define ADD_ALPHA		(0.008f)		// α値の加算量
 
-#define POS_RESULT_MISSION	(D3DXVECTOR3(380.0f, 150.0f, 0.0f))	// リザルト表示の遅刻回避の位置
-#define POS_RESULT_RESULT	(D3DXVECTOR3(960.0f, 150.0f, 0.0f))	// リザルト表示の成功失敗の位置
-#define SIZE_RESULT			(D3DXVECTOR3(632.7f, 203.5f, 0.0f))	// リザルト表示の大きさ
+#define POS_RESULT_MISSION	(D3DXVECTOR3(440.0f, 150.0f, 0.0f))	// リザルト表示の遅刻回避の位置
+#define POS_RESULT_RESULT	(D3DXVECTOR3(780.0f, 150.0f, 0.0f))	// リザルト表示の成功失敗の位置
+#define SIZE_RESULT			(D3DXVECTOR3(500.0f, 200.0f, 0.0f))	// リザルト表示の大きさ
+#define SIZE_VALUE			(D3DXVECTOR3(120.0f, 140.0f, 0.0f))
+#define SPACE_VALUE			(D3DXVECTOR3(100.0f, 0.0f, 0.0f))
 #define SET_RESULT_SCALE	(15.0f)	// リザルト表示の初期拡大率
 #define SUB_RESULT_SCALE	(0.65f)	// リザルト表示拡大率の減算量
 
@@ -62,9 +65,6 @@
 const char *CResultManager::mc_apTextureFile[] =	// テクスチャ定数
 {
 	"data\\TEXTURE\\result000.png",		// 遅刻回避テクスチャ
-	"data\\TEXTURE\\result001.png",		// 成功テクスチャ
-	"data\\TEXTURE\\result002.png",		// 失敗テクスチャ
-	"data\\TEXTURE\\result003.png",		// タイム表示テクスチャ
 	"data\\TEXTURE\\continue000.png",	// コンテニュー表示テクスチャ
 	"data\\TEXTURE\\continue001.png",	// YESテクスチャ
 	"data\\TEXTURE\\continue002.png",	// NOテクスチャ
@@ -79,8 +79,9 @@ const char *CResultManager::mc_apTextureFile[] =	// テクスチャ定数
 CResultManager::CResultManager()
 {
 	// メンバ変数をクリア
-	memset(&m_apResult[0], 0, sizeof(m_apResult));		// リザルト表示の情報
 	memset(&m_apContinue[0], 0, sizeof(m_apContinue));	// コンテニュー表示の情報
+	m_pScoreTitle	= nullptr;		// スコアタイトルの情報
+	m_pScore		= nullptr;		// スコアの情報
 	m_pContLogo		= nullptr;		// コンテニューロゴの情報
 	m_pFade			= nullptr;		// フェードの情報
 	m_state			= STATE_NONE;	// 状態
@@ -104,11 +105,6 @@ CResultManager::~CResultManager()
 HRESULT CResultManager::Init(void)
 {
 	// 変数配列を宣言
-	static D3DXVECTOR3 aPosResult[] =	// リザルトの位置
-	{
-		POS_RESULT_MISSION,	// MISSION位置
-		POS_RESULT_RESULT,	// RESULT位置
-	};
 	static D3DXVECTOR3 aPosContinue[] =	// コンテニューの位置
 	{
 		POS_CONT_YES,	// YES位置
@@ -119,8 +115,9 @@ HRESULT CResultManager::Init(void)
 	CTexture *pTexture = GET_MANAGER->GetTexture();	// テクスチャへのポインタ
 
 	// メンバ変数を初期化
-	memset(&m_apResult[0], 0, sizeof(m_apResult));		// リザルト表示の情報
 	memset(&m_apContinue[0], 0, sizeof(m_apContinue));	// コンテニュー表示の情報
+	m_pScoreTitle	= nullptr;		// スコアタイトルの情報
+	m_pScore		= nullptr;		// スコアの情報
 	m_pContLogo		= nullptr;		// コンテニューロゴの情報
 	m_pFade			= nullptr;		// フェードの情報
 	m_state			= STATE_FADEIN;	// 状態
@@ -154,32 +151,50 @@ HRESULT CResultManager::Init(void)
 	//--------------------------------------------------------
 	//	リザルト表示の生成・設定
 	//--------------------------------------------------------
-	for (int nCntResult = 0; nCntResult < result::NUM_POLYGON; nCntResult++)
-	{ // リザルト表示の総数分繰り返す
+	// リザルト表示の生成
+	m_pScoreTitle = CObject2D::Create
+	( // 引数
+		POS_RESULT_MISSION,				// 位置
+		SIZE_RESULT * SET_RESULT_SCALE	// 大きさ
+	);
+	if (m_pScoreTitle == nullptr)
+	{ // 生成に失敗した場合
 
-		// リザルト表示の生成
-		m_apResult[nCntResult] = CObject2D::Create
-		( // 引数
-			aPosResult[nCntResult],			// 位置
-			SIZE_RESULT * SET_RESULT_SCALE	// 大きさ
-		);
-		if (m_apResult[nCntResult] == nullptr)
-		{ // 生成に失敗した場合
-
-			// 失敗を返す
-			assert(false);
-			return E_FAIL;
-		}
-
-		// 優先順位を設定
-		m_apResult[nCntResult]->SetPriority(RESULT_PRIO);
-
-		// 描画をしない設定にする
-		m_apResult[nCntResult]->SetEnableDraw(false);
+		// 失敗を返す
+		assert(false);
+		return E_FAIL;
 	}
 
-	// リザルト表示のテクスチャを設定
-	SetTexResult();
+	// 優先順位を設定
+	m_pScoreTitle->SetPriority(RESULT_PRIO);
+
+	// 描画をしない設定にする
+	m_pScoreTitle->SetEnableDraw(false);
+
+	// リザルト表示の生成
+	m_pScore = CMultiValue::Create
+	( // 引数
+		CValue::TEXTURE_NORMAL,
+		GET_RETENTION->GetScore(),
+		3,
+		POS_RESULT_RESULT,				// 位置
+		SIZE_VALUE * SET_RESULT_SCALE,	// 大きさ
+		SPACE_VALUE
+	);
+	if (m_pScore == nullptr)
+	{ // 生成に失敗した場合
+
+		// 失敗を返す
+		assert(false);
+		return E_FAIL;
+	}
+
+	// 優先順位を設定
+	m_pScore->SetPriority(RESULT_PRIO);
+
+	// 描画をしない設定にする
+	m_pScore
+		->SetEnableDraw(false);
 
 	//--------------------------------------------------------
 	//	コンテニューロゴ表示の生成・設定
@@ -250,12 +265,11 @@ HRESULT CResultManager::Init(void)
 //============================================================
 HRESULT CResultManager::Uninit(void)
 {
-	for (int nCntResult = 0; nCntResult < result::NUM_POLYGON; nCntResult++)
-	{ // リザルト表示の総数分繰り返す
+	// スコアタイトル表示の終了
+	m_pScoreTitle->Uninit();
 
-		// リザルト表示の終了
-		m_apResult[nCntResult]->Uninit();
-	}
+	// スコアの終了
+	m_pScore->Uninit();
 
 	for (int nCntResult = 0; nCntResult < SELECT_MAX; nCntResult++)
 	{ // 選択肢の総数分繰り返す
@@ -348,12 +362,11 @@ void CResultManager::Update(void)
 	// 遷移決定の更新
 	UpdateTransition();
 
-	for (int nCntResult = 0; nCntResult < result::NUM_POLYGON; nCntResult++)
-	{ // リザルト表示の総数分繰り返す
+	// スコアタイトル表示の更新
+	m_pScoreTitle->Update();
 
-		// リザルト表示の更新
-		m_apResult[nCntResult]->Update();
-	}
+	// スコアの更新
+	m_pScore->Update();
 
 	for (int nCntResult = 0; nCntResult < SELECT_MAX; nCntResult++)
 	{ // 選択肢の総数分繰り返す
@@ -457,12 +470,11 @@ void CResultManager::UpdateFade(void)
 		// 透明度を補正
 		colFade.a = SETCOL_FADE.a;
 
-		for (int nCntResult = 0; nCntResult < result::NUM_POLYGON; nCntResult++)
-		{ // リザルト表示の総数分繰り返す
+		// スコアタイトル表示の描画開始
+		m_pScoreTitle->SetEnableDraw(true);
 
-			// リザルト表示の描画開始
-			m_apResult[nCntResult]->SetEnableDraw(true);
-		}
+		// スコアの描画開始
+		m_pScore->SetEnableDraw(true);
 
 		// リザルト表示の拡大率を設定
 		m_fScale = SET_RESULT_SCALE;
@@ -486,22 +498,20 @@ void CResultManager::UpdateResult(void)
 		// 拡大率を減算
 		m_fScale -= SUB_RESULT_SCALE;
 
-		for (int nCntResult = 0; nCntResult < result::NUM_POLYGON; nCntResult++)
-		{ // リザルト表示の総数分繰り返す
+		// スコアタイトル表示の大きさを設定
+		m_pScoreTitle->SetVec3Sizing(SIZE_RESULT * m_fScale);
 
-			// リザルト表示の大きさを設定
-			m_apResult[nCntResult]->SetVec3Sizing(SIZE_RESULT * m_fScale);
-		}
+		// スコアの大きさを設定
+		m_pScore->SetVec3Sizing(SIZE_VALUE * m_fScale);
 	}
 	else
 	{ // 拡大率が最小値以下の場合
 
-		for (int nCntResult = 0; nCntResult < result::NUM_POLYGON; nCntResult++)
-		{ // リザルト表示の総数分繰り返す
+		// スコアタイトル表示の大きさを設定
+		m_pScoreTitle->SetVec3Sizing(SIZE_RESULT);
 
-			// リザルト表示の大きさを設定
-			m_apResult[nCntResult]->SetVec3Sizing(SIZE_RESULT);
-		}
+		// スコアの大きさを設定
+		m_pScore->SetVec3Sizing(SIZE_VALUE);
 
 		// 状態を変更
 		m_state = STATE_CONTINUE_WAIT;	// コンテニュー表示待機状態
@@ -660,15 +670,17 @@ void CResultManager::UpdateTransition(void)
 void CResultManager::SkipStaging(void)
 {
 	// リザルト表示の描画をONにし、大きさを設定
-	for (int nCntResult = 0; nCntResult < result::NUM_POLYGON; nCntResult++)
-	{ // リザルト表示の総数分繰り返す
+	// スコアタイトル表示の描画開始
+	m_pScoreTitle->SetEnableDraw(true);
 
-		// リザルト表示の描画開始
-		m_apResult[nCntResult]->SetEnableDraw(true);
+	// スコアの描画開始
+	m_pScore->SetEnableDraw(true);
 
-		// リザルト表示の大きさを設定
-		m_apResult[nCntResult]->SetVec3Sizing(SIZE_RESULT);
-	}
+	// スコアタイトル表示の大きさを設定
+	m_pScoreTitle->SetVec3Sizing(SIZE_RESULT);
+
+	// スコアの大きさを設定
+	m_pScore->SetVec3Sizing(SIZE_VALUE);
 
 	// コンテニューロゴ表示の描画開始
 	m_pContLogo->SetEnableDraw(true);
@@ -691,43 +703,6 @@ void CResultManager::SkipStaging(void)
 
 	// 状態を変更
 	m_state = STATE_WAIT;	// 遷移待機状態
-}
-
-//============================================================
-//	リザルト表示のテクスチャの設定処理
-//============================================================
-void CResultManager::SetTexResult(void)
-{
-	// ポインタを宣言
-	CTexture *pTexture = GET_MANAGER->GetTexture();	// テクスチャへのポインタ
-
-	// MISSIONテクスチャを登録・割当
-	m_apResult[0]->BindTexture(pTexture->Regist(mc_apTextureFile[TEXTURE_MISSION]));
-
-	// RESULTテクスチャを登録・割当
-	switch (GET_RETENTION->GetResult())
-	{ // リザルトごとの処理
-	case CRetentionManager::RESULT_FAILED:
-
-		// FAILEDテクスチャ
-		m_apResult[1]->BindTexture(pTexture->Regist(mc_apTextureFile[TEXTURE_FAILED]));
-
-		break;
-
-	case CRetentionManager::RESULT_CLEAR:
-
-		// CLEARテクスチャ
-		m_apResult[1]->BindTexture(pTexture->Regist(mc_apTextureFile[TEXTURE_CLEAR]));
-
-		break;
-
-	default:
-
-		// エラーメッセージボックス
-		MessageBox(nullptr, "リザルトなしが設定されています", "警告！", MB_ICONWARNING);
-
-		break;
-	}
 }
 
 //============================================================

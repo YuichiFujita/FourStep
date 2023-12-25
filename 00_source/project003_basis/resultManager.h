@@ -11,17 +11,10 @@
 #define _RESULTMANAGER_H_
 
 //************************************************************
-//	定数宣言
-//************************************************************
-namespace result
-{
-	const int NUM_POLYGON = 2;	// リザルト表示に必要なポリゴン数
-}
-
-//************************************************************
 //	前方宣言
 //************************************************************
 class CObject2D;	// オブジェクト2Dクラス
+class CMultiValue;	// マルチ数字クラス
 
 //************************************************************
 //	クラス定義
@@ -33,13 +26,11 @@ public:
 	// テクスチャ列挙
 	enum ETexture
 	{
-		TEXTURE_MISSION = 0,	// 遅刻回避テクスチャ
-		TEXTURE_CLEAR,			// 成功テクスチャ
-		TEXTURE_FAILED,			// 失敗テクスチャ
-		TEXTURE_CONTINUE,		// コンテニュー表示テクスチャ
-		TEXTURE_YES,			// YESテクスチャ
-		TEXTURE_NO,				// NOテクスチャ
-		TEXTURE_MAX				// この列挙型の総数
+		TEXTURE_SCORE = 0,	// スコアテクスチャ
+		TEXTURE_CONTINUE,	// コンテニュー表示テクスチャ
+		TEXTURE_YES,		// YESテクスチャ
+		TEXTURE_NO,			// NOテクスチャ
+		TEXTURE_MAX			// この列挙型の総数
 	};
 
 	// 状態列挙
@@ -47,7 +38,7 @@ public:
 	{
 		STATE_NONE = 0,			// 何もしない状態
 		STATE_FADEIN,			// フェードイン状態
-		STATE_RESULT,			// リザルト表示状態
+		STATE_RESULT,			// スコア表示状態
 		STATE_CONTINUE_WAIT,	// コンテニュー表示待機状態
 		STATE_CONTINUE,			// コンテニュー表示状態
 		STATE_WAIT,				// 遷移待機状態
@@ -85,22 +76,22 @@ private:
 	void UpdateSelect(void);		// 選択更新
 	void UpdateTransition(void);	// 遷移決定
 	void SkipStaging(void);			// 演出スキップ
-	void SetTexResult(void);		// リザルト表示のテクスチャ設定
 	bool UpdateDrawWait(const int nWait);	// 表示待機
 
 	// 静的メンバ変数
 	static const char *mc_apTextureFile[];	// テクスチャ定数
 
 	// メンバ変数
-	CObject2D *m_apResult[result::NUM_POLYGON];	// リザルト表示の情報
-	CObject2D *m_apContinue[SELECT_MAX];		// コンテニュー表示の情報
-	CObject2D *m_pContLogo;	// コンテニューロゴの情報
-	CObject2D *m_pFade;		// フェードの情報
-	EState m_state;			// 状態
-	int m_nCounterState;	// 状態管理カウンター
-	int m_nSelect;			// 現在の選択
-	int m_nOldSelect;		// 前回の選択
-	float m_fScale;			// ポリゴン拡大率
+	CObject2D *m_apContinue[SELECT_MAX];	// コンテニュー表示の情報
+	CObject2D *m_pScoreTitle;	// スコアタイトルの情報
+	CMultiValue *m_pScore;		// スコアの情報
+	CObject2D *m_pContLogo;		// コンテニューロゴの情報
+	CObject2D *m_pFade;			// フェードの情報
+	EState m_state;				// 状態
+	int m_nCounterState;		// 状態管理カウンター
+	int m_nSelect;				// 現在の選択
+	int m_nOldSelect;			// 前回の選択
+	float m_fScale;				// ポリゴン拡大率
 };
 
 #endif	// _RESULTMANAGER_H_

@@ -19,8 +19,7 @@
 CRetentionManager::CRetentionManager()
 {
 	// メンバ変数をクリア
-	m_result = RESULT_NONE;	// クリア状況
-	m_nTime  = 0;			// 経過タイム
+	m_nScore = 0;
 }
 
 //============================================================
@@ -37,8 +36,7 @@ CRetentionManager::~CRetentionManager()
 HRESULT CRetentionManager::Init(void)
 {
 	// メンバ変数を初期化
-	m_result = RESULT_NONE;	// クリア状況
-	m_nTime  = 0;			// 経過タイム
+	m_nScore = 0;
 
 	// 成功を返す
 	return S_OK;
@@ -111,42 +109,19 @@ HRESULT CRetentionManager::Release(CRetentionManager *&prRetentionManager)
 }
 
 //============================================================
-//	クリア状況の設定処理
+//	スコアの設定処理
 //============================================================
-void CRetentionManager::SetResult(const EResult result)
+void CRetentionManager::SetScore(const int nScore)
 {
-	if (result > RESULT_NONE && result < RESULT_MAX)
-	{ // リザルトが範囲内の場合
-
-		// 引数のクリア状況を設定
-		m_result = result;
-	}
-	else { assert(false); }	// 範囲外
+	// 引数のスコアを設定
+	m_nScore = nScore;
 }
 
 //============================================================
-//	クリア状況取得処理
+//	スコア取得処理
 //============================================================
-CRetentionManager::EResult CRetentionManager::GetResult(void) const
+int CRetentionManager::GetScore(void) const
 {
-	// クリア状況を返す
-	return m_result;
-}
-
-//============================================================
-//	経過タイムの設定処理
-//============================================================
-void CRetentionManager::SetTime(const long nTime)
-{
-	// 引数の経過タイムを設定
-	m_nTime = nTime;
-}
-
-//============================================================
-//	経過タイム取得処理
-//============================================================
-long CRetentionManager::GetTime(void) const
-{
-	// 経過タイムを返す
-	return m_nTime;
+	// スコアを返す
+	return m_nScore;
 }

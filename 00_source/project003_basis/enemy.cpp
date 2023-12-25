@@ -13,6 +13,8 @@
 #include "sound.h"
 #include "enemyNormal.h"
 #include "scene.h"
+#include "sceneGame.h"
+#include "score.h"
 #include "stage.h"
 #include "player.h"
 #include "collision.h"
@@ -496,6 +498,13 @@ void CEnemy::UpdateKnock(void)
 
 		// 死亡状態にする
 		m_state = STATE_DEATH;
+
+		if (GET_MANAGER->GetMode() == CScene::MODE_GAME)
+		{ // ゲームモードなら
+
+			// スコア加算
+			CSceneGame::GetScore()->Add(1);
+		}
 
 		// マテリアル再設定
 		ResetMaterial();

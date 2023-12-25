@@ -14,6 +14,8 @@
 #include "camera.h"
 #include "player.h"
 #include "map.h"
+#include "retentionManager.h"
+#include "score.h"
 
 //************************************************************
 //	静的メンバ変数宣言
@@ -85,8 +87,18 @@ void CGameManager::Update(void)
 		break;
 
 	case STATE_NORMAL:
+
 		m_pMap->Update();
-		// 無し
+
+		if (CScene::GetPlayer()->GetState() == CPlayer::STATE_DEATH)
+		{ // 死亡した場合
+
+			// スコアを設定
+			GET_RETENTION->SetScore(CSceneGame::GetScore()->Get());
+
+			// シーン遷移
+			GET_MANAGER->SetScene(CScene::MODE_RESULT, 60);
+		}
 
 		break;
 
