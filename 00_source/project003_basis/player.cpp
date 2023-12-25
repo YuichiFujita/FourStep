@@ -113,7 +113,7 @@ HRESULT CPlayer::Init(void)
 		m_pAtkUI->CObjectModel::SetLabel(LABEL_UI);
 		m_pAtkUI->BindModel("data\\MODEL\\PLAYER\\sankakumodel.x");
 	}
-	
+
 	// 成功を返す
 	return S_OK;
 }
@@ -418,7 +418,7 @@ void CPlayer::SetSpawn(void)
 	ResetMaterial();
 
 	// 透明度を透明に再設定
-	SetAlpha(1.0f);
+	SetAlpha(0.0f);
 
 	// プレイヤーの描画を再開
 	SetEnableDraw(true);

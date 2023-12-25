@@ -67,6 +67,8 @@ HRESULT CEnemyNormal::Init(void)
 	// ƒ‚ƒfƒ‹‚ğ“ÇEŠ„“–
 	BindModel(mc_apModelFile[MODEL_NORMAL]);
 
+	SetAlpha(0.0f);
+
 	// ¬Œ÷‚ğ•Ô‚·
 	return S_OK;
 }
