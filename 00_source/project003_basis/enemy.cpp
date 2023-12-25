@@ -13,6 +13,7 @@
 #include "renderer.h"
 #include "enemyNormal.h"
 #include "scene.h"
+#include "stage.h"
 #include "player.h"
 #include "collision.h"
 
@@ -25,7 +26,8 @@ namespace
 	const int	DAMAGE_FRAME = 12;	// ダメージ状態フレーム数
 
 	const float	GRAVITY		= 1.0f;		// 重力
-	const float	REV_MOVE	= 0.16f;	// 通常状態時の空中の移動量の減衰係数
+	const float	JUMP_REV	= 0.16f;	// 空中の移動量の減衰係数
+	const float	LAND_REV	= 0.16f;	// 地上の移動量の減衰係数
 
 	const float	SPAWN_ADD_ALPHA = 0.0075f;	// スポーン時の透明度の加算量
 	const float	DEATH_SUB_ALPHA = 0.05f;	// 死亡時の透明度の減算量
@@ -40,7 +42,7 @@ CEnemy::SStatusInfo CEnemy::m_aStatusInfo[CEnemy::TYPE_MAX] =	// ステータス情報
 	{
 		40.0f,	// 半径
 		40.0f,	// 縦幅
-		2.0f,	// 前進の移動量
+		0.5f,	// 前進の移動量
 		2.0f,	// ジャンプ量
 		100.0f,	// 攻撃範囲
 		0.5f,	// 視認の補正係数
@@ -81,7 +83,8 @@ CEnemy::CEnemy(const EType type) : CObjectModel(CObject::LABEL_ENEMY, PRIORITY),
 	m_movePos	= VEC3_ZERO;	// 位置移動量
 	m_moveRot	= VEC3_ZERO;	// 向き変更量
 	m_state		= STATE_SPAWN;	// 状態
-	m_nCounterState = 0;		// 状態管理カウンター
+	m_bJump		= false;		// ジャンプ状況
+	m_nCounterState	= 0;		// 状態管理カウンター
 
 	// 敵の総数を加算
 	m_nNumAll++;
@@ -106,7 +109,8 @@ HRESULT CEnemy::Init(void)
 	m_movePos	= VEC3_ZERO;	// 位置移動量
 	m_moveRot	= VEC3_ZERO;	// 向き変更量
 	m_state		= STATE_SPAWN;	// 状態
-	m_nCounterState = 0;		// 状態管理カウンター
+	m_bJump		= true;			// ジャンプ状況
+	m_nCounterState	= 0;		// 状態管理カウンター
 
 	// オブジェクトモデルの初期化
 	if (FAILED(CObjectModel::Init()))
@@ -520,10 +524,12 @@ void CEnemy::UpdateAction(void)
 	CPlayer *pPlayer = CScene::GetPlayer();	// プレイヤー情報
 	assert(pPlayer != nullptr);
 
+	CStage *pStage = CScene::GetStage();	// ステージ情報
+	assert(pStage != nullptr);
+
 	// 変数を宣言
 	SStatusInfo  status = GetStatusInfo();				// 敵ステータス
 	D3DXVECTOR3 posEnemy = GetVec3Position();			// 敵位置
-	D3DXVECTOR3 moveEnemy = GetMovePosition();			// 敵移動量
 	D3DXVECTOR3 rotEnemy = GetVec3Rotation();			// 敵向き
 	D3DXVECTOR3 posLook = pPlayer->GetVec3Position();	// プレイヤー位置
 	float fPlayerRadius = pPlayer->GetRadius();			// プレイヤー半径
@@ -536,21 +542,11 @@ void CEnemy::UpdateAction(void)
 	{ // 敵の攻撃範囲外の場合
 
 		// 対象の方向を向かせる
-		Look(posLook, posEnemy, &rotEnemy);
+		UpdateLook(posLook, posEnemy, &rotEnemy);
 
 		// 対象の方向に移動 (前進)
-		moveEnemy.x -= sinf(rotEnemy.y) * status.fForwardMove;
-		moveEnemy.z -= cosf(rotEnemy.y) * status.fForwardMove;
-
-		// 重力を加算
-		//moveEnemy.y -= GRAVITY;
-
-		// 移動量を加算
-		posEnemy += moveEnemy;
-
-		// 移動量を減衰
-		moveEnemy.x += (0.0f - moveEnemy.x) * REV_MOVE;
-		moveEnemy.z += (0.0f - moveEnemy.z) * REV_MOVE;
+		m_movePos.x -= sinf(rotEnemy.y) * status.fForwardMove;
+		m_movePos.z -= cosf(rotEnemy.y) * status.fForwardMove;
 	}
 	else
 	{ // 敵の攻撃範囲内の場合
@@ -558,11 +554,38 @@ void CEnemy::UpdateAction(void)
 
 	}
 
+	// 重力を与える
+	m_movePos.y -= GRAVITY;
+
+	// 移動量を加算
+	posEnemy += m_movePos;
+
+	// 移動量を減衰
+	if (m_bJump)
+	{ // 空中の場合
+
+		m_movePos.x += (0.0f - m_movePos.x) * JUMP_REV;
+		m_movePos.z += (0.0f - m_movePos.z) * JUMP_REV;
+	}
+	else
+	{ // 地上の場合
+
+		m_movePos.x += (0.0f - m_movePos.x) * LAND_REV;
+		m_movePos.z += (0.0f - m_movePos.z) * LAND_REV;
+	}
+
+	// 着地状況の更新
+	UpdateLanding(&posEnemy);
+
+	// キルYとの判定
+	if (pStage->CollisionKillY(posEnemy))
+	{ // キルYより下の位置にいる場合
+
+		// TODO：ここに落下処理
+	}
+
 	// 位置を反映
 	SetVec3Position(posEnemy);
-
-	// 位置移動量を反映
-	SetMovePosition(moveEnemy);
 
 	// 向きを反映
 	SetVec3Rotation(rotEnemy);
@@ -571,7 +594,7 @@ void CEnemy::UpdateAction(void)
 //============================================================
 //	対象視認処理
 //============================================================
-void CEnemy::Look(const D3DXVECTOR3& rPosLook, const D3DXVECTOR3& rPosEnemy, D3DXVECTOR3 *pRotEnemy)
+void CEnemy::UpdateLook(const D3DXVECTOR3& rPosLook, const D3DXVECTOR3& rPosEnemy, D3DXVECTOR3 *pRotEnemy)
 {
 	// 変数を宣言
 	float fDestRot = 0.0f;	// 目標向き
@@ -587,6 +610,37 @@ void CEnemy::Look(const D3DXVECTOR3& rPosLook, const D3DXVECTOR3& rPosEnemy, D3D
 	// 向きの更新
 	pRotEnemy->y += fDiffRot * m_status.fLookRev;
 	useful::NormalizeRot(pRotEnemy->y);	// 向きの正規化
+}
+
+//============================================================
+//	着地状況の更新処理
+//============================================================
+bool CEnemy::UpdateLanding(D3DXVECTOR3 *pPos)
+{
+	// ポインタを宣言
+	CStage *pStage = CScene::GetStage();	// ステージ情報
+	assert(pStage != nullptr);
+
+	// 変数を宣言
+	bool bLand = false;	// 着地状況
+
+	// ジャンプしている状態にする
+	m_bJump = true;
+
+	// 地面・制限位置の着地判定
+	if (pStage->LandFieldPosition(*pPos, m_movePos)
+	||  pStage->LandLimitPosition(*pPos, m_movePos, 0.0f))
+	{ // プレイヤーが着地していた場合
+
+		// 着地している状態にする
+		bLand = true;
+
+		// ジャンプしていない状態にする
+		m_bJump = false;
+	}
+
+	// 着地状況を返す
+	return bLand;
 }
 
 //============================================================

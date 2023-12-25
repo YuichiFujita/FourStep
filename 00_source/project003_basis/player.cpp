@@ -566,6 +566,10 @@ void CPlayer::UpdateGravity(void)
 //============================================================
 bool CPlayer::UpdateLanding(D3DXVECTOR3& rPos)
 {
+	// ポインタを宣言
+	CStage *pStage = CScene::GetStage();	// ステージ情報
+	assert(pStage != nullptr);
+
 	// 変数を宣言
 	bool bLand = false;	// 着地状況
 
@@ -573,8 +577,8 @@ bool CPlayer::UpdateLanding(D3DXVECTOR3& rPos)
 	m_bJump = true;
 
 	// 地面・制限位置の着地判定
-	if (CScene::GetStage()->LandFieldPosition(rPos, m_move)
-	||  CScene::GetStage()->LandLimitPosition(rPos, m_move, 0.0f))
+	if (pStage->LandFieldPosition(rPos, m_move)
+	||  pStage->LandLimitPosition(rPos, m_move, 0.0f))
 	{ // プレイヤーが着地していた場合
 
 		// 着地している状態にする

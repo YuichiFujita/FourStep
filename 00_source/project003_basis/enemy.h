@@ -107,12 +107,13 @@ protected:
 	virtual void UpdateAction(void);	// 敵の動作の更新
 
 	// メンバ関数
-	void Look	// 対象視認
+	void UpdateLook	// 対象視認
 	( // 引数
 		const D3DXVECTOR3& rPosLook,	// 視認対象位置
 		const D3DXVECTOR3& rPosEnemy,	// 敵位置
 		D3DXVECTOR3 *pRotEnemy			// 敵向き
 	);
+	bool UpdateLanding(D3DXVECTOR3 *pPos);	// 着地状況の更新
 
 private:
 	// メンバ関数
@@ -127,8 +128,9 @@ private:
 	D3DXVECTOR3	m_oldPos;		// 過去位置
 	D3DXVECTOR3	m_movePos;		// 位置移動量
 	D3DXVECTOR3	m_moveRot;		// 向き移動量
-	EState m_state;				// 状態
-	int m_nCounterState;		// 状態管理カウンター
+	EState	m_state;			// 状態
+	int		m_nCounterState;	// 状態管理カウンター
+	bool	m_bJump;			// ジャンプ状況
 	const EType m_type;			// 種類定数
 	const SStatusInfo m_status;	// ステータス定数
 };
