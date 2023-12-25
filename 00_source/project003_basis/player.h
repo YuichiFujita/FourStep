@@ -90,6 +90,7 @@ private:
 	D3DXVECTOR3	m_oldPos;		// 過去位置
 	D3DXVECTOR3	m_move;			// 移動量
 	D3DXVECTOR3	m_destRot;		// 目標向き
+	float	m_RSrickRot;	// 右スティックの向き
 	EState	m_state;			// 状態
 	int		m_nCounterState;	// 状態管理カウンター
 	bool	m_bJump;			// ジャンプ状況
