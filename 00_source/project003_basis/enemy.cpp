@@ -4,13 +4,13 @@
 //	Author：藤田勇一
 //
 //============================================================
-#if 1
 //************************************************************
 //	インクルードファイル
 //************************************************************
 #include "enemy.h"
 #include "manager.h"
 #include "renderer.h"
+#include "sound.h"
 #include "enemyNormal.h"
 #include "scene.h"
 #include "stage.h"
@@ -28,6 +28,9 @@ namespace
 	const float	GRAVITY		= 1.0f;		// 重力
 	const float	JUMP_REV	= 0.16f;	// 空中の移動量の減衰係数
 	const float	LAND_REV	= 0.16f;	// 地上の移動量の減衰係数
+	const float	KNOCK_REV	= 0.45f;	// 吹っ飛び状態時の移動量の減衰係数
+	const float	KNOCK_UP	= 15.0f;	// ノック上昇量
+	const float	KNOCK_SIDE	= 35.0f;	// ノック横移動量
 
 	const float	SPAWN_ADD_ALPHA = 0.0075f;	// スポーン時の透明度の加算量
 	const float	DEATH_SUB_ALPHA = 0.05f;	// 死亡時の透明度の減算量
@@ -155,55 +158,44 @@ void CEnemy::Draw(void)
 //============================================================
 //	ノックバックヒット処理
 //============================================================
-void CEnemy::HitKnockBack(const int nDmg, const D3DXVECTOR3& vec)
+void CEnemy::HitKnockBack(const int nDmg, const D3DXVECTOR3&vecKnock)
 {
-#if 0
-	// 変数を宣言
-	D3DXVECTOR3 pos = GetVec3Position();	// 敵位置
-	D3DXVECTOR3 vecKnock = vec;				// ノックバックベクトル
+	if (IsDeath())
+	{ // 死亡フラグが立っている場合
 
-	if (IsDeath() != true && m_state == STATE_NORMAL)
-	{ // 死亡フラグが立っていない且つ、通常状態の場合
-
-		// レベルを加算
-		m_pBubble->AddLevel(nDmg);
-
-		if (m_pBubble->GetLevel() < m_status.nLife)
-		{ // 生きている場合
-
-			// ノックバック移動量を設定
-			vecKnock.y = 0.0f;									// 縦ベクトルを初期化
-			D3DXVec3Normalize(&vecKnock, &vecKnock);			// ベクトルを正規化
-			m_moveKnock = vecKnock * m_status.fKnockBackSide;	// ノックバック横移動量を計算
-			m_moveKnock.y = m_status.fKnockBackUp;				// ノックバック縦移動量を代入
-
-			// カウンターを初期化
-			m_nCounterState = 0;
-			m_nCounterBubble = 0;
-
-			// 状態を設定
-			m_state = STATE_DAMAGE;	// ダメージ状態
-		}
-		else
-		{ // 死んでいる場合
-
-			// モーションを更新しない状態にする
-			SetEnableMotionUpdate(false);
-
-			// 方向表示を削除
-			m_pWay->Delete();
-
-			// 状態を設定
-			m_state = STATE_DEATH;	// 死亡状態
-
-			// サウンドの再生
-			CManager::GetSound()->Play(CSound::LABEL_SE_FLY);	// 浮遊音
-		}
-
-		// パーティクル3Dオブジェクトを生成
-		CParticle3D::Create(CParticle3D::TYPE_BUBBLE_EXPLOSION, pos);
+		return;
 	}
-#endif
+
+	if (m_state != STATE_NORMAL)
+	{ // 通常状態ではない場合
+
+		return;
+	}
+
+	// 変数を宣言
+	D3DXVECTOR3 posPlayer = GetVec3Position();	// プレイヤー位置
+	D3DXVECTOR3 rotPlayer = GetVec3Rotation();	// プレイヤー向き
+
+	// カウンターを初期化
+	m_nCounterState = 0;
+
+	// ノックバック移動量を設定
+	m_movePos.x = KNOCK_SIDE * vecKnock.x;
+	m_movePos.y = KNOCK_UP;
+	m_movePos.z = KNOCK_SIDE * vecKnock.z;
+
+	// ノックバック方向に向きを設定
+	rotPlayer.y = atan2f(vecKnock.x, vecKnock.z);	// 吹っ飛び向きを計算
+	SetVec3Rotation(rotPlayer);	// 向きを設定
+
+	// 空中状態にする
+	m_bJump = true;
+
+	// ノック状態を設定
+	SetState(STATE_KNOCK);
+
+	// サウンドの再生
+	CManager::GetInstance()->GetSound()->Play(CSound::LABEL_SE_HIT);	// ヒット音
 }
 
 //============================================================
@@ -458,6 +450,9 @@ CEnemy::SStatusInfo CEnemy::GetStatusInfo(void) const
 //============================================================
 void CEnemy::UpdateSpawn(void)
 {
+	// マテリアル再設定
+	ResetMaterial();
+
 	// フェードアウトの更新
 	if (UpdateFadeOut(SPAWN_ADD_ALPHA))
 	{ // 不透明になった場合
@@ -472,27 +467,40 @@ void CEnemy::UpdateSpawn(void)
 //============================================================
 void CEnemy::UpdateKnock(void)
 {
-	if (m_nCounterState < DAMAGE_FRAME)
-	{ // カウンターが一定値より小さい場合
+	// 変数を宣言
+	D3DXVECTOR3 posEnemy = GetVec3Position();	// プレイヤー位置
 
-		// カウンターを加算
-		m_nCounterState++;
+	// ポインタを宣言
+	CStage *pStage = CScene::GetStage();	// ステージ情報
+	assert(pStage != nullptr);
 
-		// マテリアルを全設定
-		SetAllMaterial(material::Red());	// 赤
-	}
-	else
-	{ // カウンターが一定値以上の場合
+	// マテリアルを全設定
+	SetAllMaterial(material::Red());	// 赤
 
-		// カウンターを初期化
-		m_nCounterState = 0;
+	// 重力を与える
+	m_movePos.y -= GRAVITY;
 
-		// マテリアル再設定
-		ResetMaterial();
+	// 着地判定
+	if (UpdateLanding(&posEnemy))
+	{ // 着地した場合
 
 		// 通常状態にする
 		m_state = STATE_NORMAL;
 	}
+
+	// ステージ範囲外の補正
+	pStage->LimitPosition(posEnemy, m_status.fRadius);
+
+	// キルYとの判定
+	if (pStage->CollisionKillY(posEnemy))
+	{ // キルYより下の位置にいる場合
+
+		// 死亡状態にする
+		m_state = STATE_DEATH;
+	}
+
+	// 位置を反映
+	SetVec3Position(posEnemy);
 }
 
 //============================================================
@@ -500,6 +508,24 @@ void CEnemy::UpdateKnock(void)
 //============================================================
 bool CEnemy::UpdateDeath(void)
 {
+	// 変数を宣言
+	D3DXVECTOR3 posEnemy = GetVec3Position();	// 敵位置
+
+	// マテリアル再設定
+	ResetMaterial();
+
+	// 過去位置の更新
+	UpdateOldPosition();
+
+	// 重力を与える
+	m_movePos.y -= GRAVITY;
+
+	// 着地状況の更新
+	UpdateLanding(&posEnemy);
+
+	// 位置を反映
+	SetVec3Position(posEnemy);
+
 	// フェードインの更新
 	if (UpdateFadeIn(DEATH_SUB_ALPHA))
 	{ // 透明になった場合
@@ -534,8 +560,14 @@ void CEnemy::UpdateAction(void)
 	D3DXVECTOR3 posLook = pPlayer->GetVec3Position();	// プレイヤー位置
 	float fPlayerRadius = pPlayer->GetRadius();			// プレイヤー半径
 
+	// マテリアル再設定
+	ResetMaterial();
+
 	// 過去位置の更新
 	UpdateOldPosition();
+
+	// 重力を与える
+	m_movePos.y -= GRAVITY;
 
 	// 視認対象の攻撃判定
 	if (!collision::Circle2D(posLook, posEnemy, fPlayerRadius, status.fAttackRadius))
@@ -554,34 +586,18 @@ void CEnemy::UpdateAction(void)
 
 	}
 
-	// 重力を与える
-	m_movePos.y -= GRAVITY;
-
-	// 移動量を加算
-	posEnemy += m_movePos;
-
-	// 移動量を減衰
-	if (m_bJump)
-	{ // 空中の場合
-
-		m_movePos.x += (0.0f - m_movePos.x) * JUMP_REV;
-		m_movePos.z += (0.0f - m_movePos.z) * JUMP_REV;
-	}
-	else
-	{ // 地上の場合
-
-		m_movePos.x += (0.0f - m_movePos.x) * LAND_REV;
-		m_movePos.z += (0.0f - m_movePos.z) * LAND_REV;
-	}
-
 	// 着地状況の更新
 	UpdateLanding(&posEnemy);
+
+	// ステージ範囲外の補正
+	pStage->LimitPosition(posEnemy, m_status.fRadius);
 
 	// キルYとの判定
 	if (pStage->CollisionKillY(posEnemy))
 	{ // キルYより下の位置にいる場合
 
-		// TODO：ここに落下処理
+		// 死亡状態にする
+		m_state = STATE_DEATH;
 	}
 
 	// 位置を反映
@@ -617,20 +633,16 @@ void CEnemy::UpdateLook(const D3DXVECTOR3& rPosLook, const D3DXVECTOR3& rPosEnem
 //============================================================
 bool CEnemy::UpdateLanding(D3DXVECTOR3 *pPos)
 {
-	// ポインタを宣言
-	CStage *pStage = CScene::GetStage();	// ステージ情報
-	assert(pStage != nullptr);
-
 	// 変数を宣言
 	bool bLand = false;	// 着地状況
 
 	// ジャンプしている状態にする
 	m_bJump = true;
 
-	// 地面・制限位置の着地判定
-	if (pStage->LandFieldPosition(*pPos, m_movePos)
-	||  pStage->LandLimitPosition(*pPos, m_movePos, 0.0f))
-	{ // プレイヤーが着地していた場合
+	// 位置の更新
+	// 地盤の当たり判定・着地判定
+	if (CollisionGround(*pPos))
+	{ // 地盤に着地していた場合
 
 		// 着地している状態にする
 		bLand = true;
@@ -706,4 +718,196 @@ bool CEnemy::UpdateFadeIn(const float fSub)
 	// 透明状況を返す
 	return bAlpha;
 }
-#endif
+
+//============================================================
+//	地盤との一軸ごとの当たり判定
+//============================================================
+bool CEnemy::ResponseSingleGround(const EAxis axis, D3DXVECTOR3& rPos)
+{
+	// 変数を宣言
+	D3DXVECTOR3 sizeMinPlayer = D3DXVECTOR3(m_status.fRadius, 0.0f,				m_status.fRadius);	// 敵の最小大きさ
+	D3DXVECTOR3 sizeMaxPlayer = D3DXVECTOR3(m_status.fRadius, m_status.fHeight, m_status.fRadius);	// 敵の最大大きさ
+	bool bMin = false;	// 不の方向の判定状況
+	bool bMax = false;	// 正の方向の判定状況
+	bool bHit = false;	// 着地の判定情報
+
+	for (int nCntPri = 0; nCntPri < object::MAX_PRIO; nCntPri++)
+	{ // 優先順位の総数分繰り返す
+
+		// ポインタを宣言
+		CObject *pObjectTop = CObject::GetTop(nCntPri);	// 先頭オブジェクト
+
+		if (pObjectTop != NULL)
+		{ // 先頭が存在する場合
+
+			// ポインタを宣言
+			CObject *pObjCheck = pObjectTop;	// オブジェクト確認用
+
+			while (pObjCheck != NULL)
+			{ // オブジェクトが使用されている場合繰り返す
+
+				// 変数を宣言
+				D3DXVECTOR3 posGround = VEC3_ZERO;		// 地盤位置
+				D3DXVECTOR3 rotGround = VEC3_ZERO;		// 地盤向き
+				D3DXVECTOR3 sizeMinGround = VEC3_ZERO;	// 地盤最小大きさ
+				D3DXVECTOR3 sizeMaxGround = VEC3_ZERO;	// 地盤最大大きさ
+
+				// ポインタを宣言
+				CObject *pObjectNext = pObjCheck->GetNext();	// 次オブジェクト
+
+				if (pObjCheck->GetLabel() != CObject::LABEL_GROUND)
+				{ // オブジェクトラベルが地盤ではない場合
+
+					// 次のオブジェクトへのポインタを代入
+					pObjCheck = pObjectNext;
+
+					// 次の繰り返しに移行
+					continue;
+				}
+
+				// 地盤の位置を設定
+				posGround = pObjCheck->GetVec3Position();
+
+				// 地盤の向きを設定
+				rotGround = pObjCheck->GetVec3Rotation();
+
+				// 地盤の最小の大きさを設定
+				sizeMinGround = pObjCheck->GetVec3Sizing();
+				sizeMinGround.y *= 2.0f;	// 縦の大きさを倍にする
+
+				// 地盤の最大の大きさを設定
+				sizeMaxGround = pObjCheck->GetVec3Sizing();
+				sizeMaxGround.y = 0.0f;		// 縦の大きさを初期化
+
+				switch (axis)
+				{ // 判定軸ごとの処理
+				case AXIS_X:	// X軸
+
+					// X軸の衝突判定
+					collision::ResponseSingleX
+					( // 引数
+						rPos,			// 判定位置
+						m_oldPos,		// 判定過去位置
+						posGround,		// 判定目標位置
+						sizeMaxPlayer,	// 判定サイズ(右・上・後)
+						sizeMinPlayer,	// 判定サイズ(左・下・前)
+						sizeMaxGround,	// 判定目標サイズ(右・上・後)
+						sizeMinGround,	// 判定目標サイズ(左・下・前)
+						&m_movePos		// 移動量
+					);
+
+					break;
+
+				case AXIS_Y:	// Y軸
+
+					// Y軸の衝突判定
+					collision::ResponseSingleY
+					( // 引数
+						rPos,			// 判定位置
+						m_oldPos,		// 判定過去位置
+						posGround,		// 判定目標位置
+						sizeMaxPlayer,	// 判定サイズ(右・上・後)
+						sizeMinPlayer,	// 判定サイズ(左・下・前)
+						sizeMaxGround,	// 判定目標サイズ(右・上・後)
+						sizeMinGround,	// 判定目標サイズ(左・下・前)
+						&m_movePos,		// 移動量
+						true,			// X判定
+						true,			// Z判定
+						&bMin,			// 下からの判定
+						&bMax			// 上からの判定
+					);
+
+					if (bMax)
+					{ // 上から当たっていた場合
+
+						// 着地している状況にする
+						bHit = true;
+					}
+
+					break;
+
+				case AXIS_Z:	// Z軸
+
+					// Z軸の衝突判定
+					collision::ResponseSingleZ
+					( // 引数
+						rPos,			// 判定位置
+						m_oldPos,		// 判定過去位置
+						posGround,		// 判定目標位置
+						sizeMaxPlayer,	// 判定サイズ(右・上・後)
+						sizeMinPlayer,	// 判定サイズ(左・下・前)
+						sizeMaxGround,	// 判定目標サイズ(右・上・後)
+						sizeMinGround,	// 判定目標サイズ(左・下・前)
+						&m_movePos		// 移動量
+					);
+
+					break;
+
+				default:	// 例外処理
+					assert(false);
+					break;
+				}
+
+				// 次のオブジェクトへのポインタを代入
+				pObjCheck = pObjectNext;
+			}
+		}
+	}
+
+	// 各軸の判定情報を返す
+	return bHit;
+}
+
+//============================================================
+//	地盤との当たり判定
+//============================================================
+bool CEnemy::CollisionGround(D3DXVECTOR3& rPos)
+{
+	// 変数を宣言
+	bool bLand = false;	// 着地状況
+
+	// 移動量を加算
+	rPos.x += m_movePos.x;
+
+	// X軸の当たり判定
+	ResponseSingleGround(AXIS_X, rPos);
+
+	// 移動量を加算
+	rPos.y += m_movePos.y;
+
+	// Y軸の当たり判定
+	bLand = ResponseSingleGround(AXIS_Y, rPos);
+
+	// 移動量を加算
+	rPos.z += m_movePos.z;
+
+	// Z軸の当たり判定
+	ResponseSingleGround(AXIS_Z, rPos);
+
+	if (m_state == STATE_KNOCK)
+	{ // ノック状態の場合
+
+		m_movePos.x += (0.0f - m_movePos.x) * KNOCK_REV;
+		m_movePos.z += (0.0f - m_movePos.z) * KNOCK_REV;
+	}
+	else
+	{ // それ以外の状態の場合
+
+		// 移動量を減衰
+		if (m_bJump)
+		{ // 空中の場合
+
+			m_movePos.x += (0.0f - m_movePos.x) * JUMP_REV;
+			m_movePos.z += (0.0f - m_movePos.z) * JUMP_REV;
+		}
+		else
+		{ // 地上の場合
+
+			m_movePos.x += (0.0f - m_movePos.x) * LAND_REV;
+			m_movePos.z += (0.0f - m_movePos.z) * LAND_REV;
+		}
+	}
+
+	// 着地状況を返す
+	return bLand;
+}
