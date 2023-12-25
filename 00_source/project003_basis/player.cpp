@@ -428,6 +428,10 @@ void CPlayer::UpdateNormal(void)
 		return;
 	}
 
+
+	// マテリアル再設定
+	ResetMaterial();
+
 	// 変数を宣言
 	D3DXVECTOR3 vecStickR = D3DXVECTOR3((float)GET_INPUTPAD->GetPressRStickX(), (float)GET_INPUTPAD->GetPressRStickY(), 0.0f);	// スティック各軸の倒し量
 	float fStickR = sqrtf(vecStickR.x * vecStickR.x + vecStickR.y * vecStickR.y) * 0.5f;	// スティックの倒し量
@@ -493,6 +497,9 @@ void CPlayer::UpdateKnock(void)
 	CStage *pStage = CScene::GetStage();	// ステージ情報
 	assert(pStage != nullptr);
 
+	// マテリアルを全設定
+	SetAllMaterial(material::Red());	// 赤
+
 	// 重力の更新
 	UpdateGravity();
 
@@ -516,6 +523,9 @@ void CPlayer::UpdateKnock(void)
 
 		// 死亡状態にする
 		m_state = STATE_DEATH;
+
+		// マテリアル再設定
+		ResetMaterial();
 	}
 
 	// 位置を反映
