@@ -99,7 +99,10 @@ HRESULT CGround::Init(void)
 //============================================================
 void CGround::Uninit(void)
 {
-	CGameManager::GetMap()->FalseUseBlock(m_WNumber, m_HNumber);
+	if (CGameManager::GetMap() != nullptr)
+	{
+		CGameManager::GetMap()->FalseUseBlock(m_WNumber, m_WNumber);
+	}
 	// オブジェクトメッシュキューブの終了
 	CObjectMeshCube::Uninit();
 }

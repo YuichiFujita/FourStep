@@ -27,6 +27,13 @@
 CMap::CMap()
 {
 	// ƒƒ“ƒo•Ï”‚ğƒNƒŠƒA
+	for (int nCntW = 0; nCntW < BLOCK_WIGHT; nCntW++)
+	{
+		for (int nCntH = 0; nCntH < BLOCK_HEIGHT; nCntH++)
+		{
+			m_bUseBlock[nCntW][nCntH] = false;
+		}
+	}
 }
 
 //============================================================
