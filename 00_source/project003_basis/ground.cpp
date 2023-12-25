@@ -20,53 +20,6 @@
 //************************************************************
 //	静的メンバ変数宣言
 //************************************************************
-const char *CGround::mc_apTextureFile[][6] =	// テクスチャ定数
-{
-	{ // 草原テクスチャ
-		"data\\TEXTURE\\soil2.png",	// 左テクスチャ
-		"data\\TEXTURE\\soil2.png",	// 右テクスチャ
-		"data\\TEXTURE\\soil2.png",	// 下テクスチャ
-		"data\\TEXTURE\\soil.png",	// 上テクスチャ
-		"data\\TEXTURE\\soil2.png",	// 前テクスチャ
-		"data\\TEXTURE\\soil2.png",	// 後テクスチャ
-	},
-
-	{ // 石テクスチャ
-		"data\\TEXTURE\\stone_002.png",	// 左テクスチャ
-		"data\\TEXTURE\\stone_002.png",	// 右テクスチャ
-		"data\\TEXTURE\\stone_002.png",	// 下テクスチャ
-		"data\\TEXTURE\\stone_002.png",	// 上テクスチャ
-		"data\\TEXTURE\\stone_002.png",	// 前テクスチャ
-		"data\\TEXTURE\\stone_002.png",	// 後テクスチャ
-	},
-
-	{ // 氷テクスチャ
-		"data\\TEXTURE\\snow.png",	// 左テクスチャ
-		"data\\TEXTURE\\snow.png",	// 右テクスチャ
-		"data\\TEXTURE\\snow.png",	// 下テクスチャ
-		"data\\TEXTURE\\snow.png",	// 上テクスチャ
-		"data\\TEXTURE\\snow.png",	// 前テクスチャ
-		"data\\TEXTURE\\snow.png",	// 後テクスチャ
-	},
-
-	{ // 火山灰(黒)テクスチャ
-		"data\\TEXTURE\\ash.png",	// 左テクスチャ
-		"data\\TEXTURE\\ash.png",	// 右テクスチャ
-		"data\\TEXTURE\\ash.png",	// 下テクスチャ
-		"data\\TEXTURE\\ash.png",	// 上テクスチャ
-		"data\\TEXTURE\\ash.png",	// 前テクスチャ
-		"data\\TEXTURE\\ash.png",	// 後テクスチャ
-	},
-
-	{ // 泥テクスチャ
-		"data\\TEXTURE\\mud.png",	// 左テクスチャ
-		"data\\TEXTURE\\mud.png",	// 右テクスチャ
-		"data\\TEXTURE\\mud.png",	// 下テクスチャ
-		"data\\TEXTURE\\mud.png",	// 上テクスチャ
-		"data\\TEXTURE\\mud.png",	// 前テクスチャ
-		"data\\TEXTURE\\mud.png",	// 後テクスチャ
-	},
-};
 
 //************************************************************
 //	子クラス [CGround] のメンバ関数
@@ -77,7 +30,6 @@ const char *CGround::mc_apTextureFile[][6] =	// テクスチャ定数
 CGround::CGround() : CObjectMeshCube(CObject::LABEL_GROUND, GROUND_PRIO)
 {
 	// メンバ変数をクリア
-	m_type = TYPE_GRASS;	// 種類
 }
 
 //============================================================
@@ -94,7 +46,6 @@ CGround::~CGround()
 HRESULT CGround::Init(void)
 {
 	// メンバ変数を初期化
-	m_type = TYPE_GRASS;	// 種類
 
 	// オブジェクトメッシュキューブの初期化
 	if (FAILED(CObjectMeshCube::Init()))
@@ -167,59 +118,10 @@ void CGround::Draw(void)
 }
 
 //============================================================
-//	種類の設定処理
-//============================================================
-void CGround::SetType(const int nType)
-{
-	// 変数を宣言
-	SFaceTex faceTex;	// テクスチャインデックス設定用
-
-	// ポインタを宣言
-	CTexture *pTexture = CManager::GetInstance()->GetTexture();	// テクスチャへのポインタ
-	if (pTexture == NULL)
-	{ // 使用されていない場合
-
-		// 処理を抜ける
-		assert(false);
-		return;
-	}
-
-	if (nType > NONE_IDX && nType < TYPE_MAX)
-	{ // 種類が範囲内の場合
-
-		// 引数の種類を設定
-		m_type = (EType)nType;
-
-		// 引数の種類のテクスチャを登録
-		faceTex = SFaceTex
-		( // 引数
-			pTexture->Regist(mc_apTextureFile[nType][0]),	// 左
-			pTexture->Regist(mc_apTextureFile[nType][1]),	// 右
-			pTexture->Regist(mc_apTextureFile[nType][2]),	// 下
-			pTexture->Regist(mc_apTextureFile[nType][3]),	// 上
-			pTexture->Regist(mc_apTextureFile[nType][4]),	// 前
-			pTexture->Regist(mc_apTextureFile[nType][5])	// 後
-		);
-		BindTexture(faceTex);	// テクスチャを割当
-	}
-	else { assert(false); }	// 種類オーバー
-}
-
-//============================================================
-//	種類取得処理
-//============================================================
-int CGround::GetType(void) const
-{
-	// 種類を返す
-	return m_type;
-}
-
-//============================================================
 //	生成処理
 //============================================================
 CGround *CGround::Create
 (
-	const EType type,				// 種類
 	const D3DXVECTOR3& rPos,		// 位置
 	const D3DXVECTOR3& rRot,		// 向き
 	const D3DXVECTOR3& rSize,		// 大きさ
@@ -253,9 +155,6 @@ CGround *CGround::Create
 			// 失敗を返す
 			return NULL;
 		}
-
-		// 種類を設定
-		pGround->SetType(type);
 
 		// 位置を設定
 		pGround->SetVec3Position(rPos);

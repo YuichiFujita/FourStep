@@ -74,6 +74,8 @@ private:
 	void UpdateOldPosition(void);			// 過去位置の更新
 	void UpdateMove(void);					// 移動量・目標向きの更新
 	void UpdateJump(void);					// ジャンプの更新
+	void UpdateAttack(void);				// 攻撃の更新
+	void UpdateBullet(void);				// 射撃の更新
 	void UpdateGravity(void);				// 重力の更新
 	bool UpdateLanding(D3DXVECTOR3& rPos);	// 着地状況の更新
 	void UpdatePosition(D3DXVECTOR3& rPos);	// 位置の更新
