@@ -16,6 +16,11 @@
 #include "objectModel.h"
 
 //************************************************************
+//	前方宣言
+//************************************************************
+class CObjectOrbit;	// 軌跡クラス
+
+//************************************************************
 //	クラス定義
 //************************************************************
 // プレイヤークラス
@@ -105,6 +110,7 @@ private:
 	static const char *mc_apModelFile[];	// モデル定数
 
 	// メンバ変数
+	CObjectOrbit *m_pOrbit;		// 軌跡
 	D3DXVECTOR3	m_oldPos;		// 過去位置
 	D3DXVECTOR3	m_move;			// 移動量
 	D3DXVECTOR3	m_destRot;		// 目標向き
@@ -114,7 +120,7 @@ private:
 	bool	m_bJump;			// ジャンプ状況
 	bool	m_bAttack;			// ジャンプ状況
 	CObjectModel* m_pAtkUI;		// 攻撃の三角UI
-	CObjectModel* m_pShadow;		// 攻撃の三角UI
+	CObjectModel* m_pShadow;	// 攻撃の三角UI
 };
 
 #endif	// _PLAYER_H_
