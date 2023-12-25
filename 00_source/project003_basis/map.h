@@ -19,8 +19,8 @@
 //************************************************************
 //	マクロ定義
 //************************************************************
-#define BLOCK_WIGHT		(10)
-#define BLOCK_HEIGHT	(10)
+#define BLOCK_WIGHT		(20)
+#define BLOCK_HEIGHT	(20)
 
 //************************************************************
 //	クラス定義
@@ -65,6 +65,8 @@ private:
 	);	// ブロックの設置
 
 	bool m_bUseBlock[BLOCK_WIGHT][BLOCK_HEIGHT];
+	int nCntTime;
+	int nSpwnEnemy;
 };
 
 #endif	// _GROUND_H_

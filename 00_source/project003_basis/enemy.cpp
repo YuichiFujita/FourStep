@@ -16,6 +16,8 @@
 #include "stage.h"
 #include "player.h"
 #include "collision.h"
+#include "effect3D.h"
+#include "ground.h"
 
 //************************************************************
 //	定数宣言
@@ -43,7 +45,7 @@ CEnemy::SStatusInfo CEnemy::m_aStatusInfo[CEnemy::TYPE_MAX] =	// ステータス情報
 {
 	// 通常敵のステータス情報
 	{
-		40.0f,	// 半径
+		50.0f,	// 半径
 		40.0f,	// 縦幅
 		0.5f,	// 前進の移動量
 		2.0f,	// ジャンプ量
@@ -85,8 +87,11 @@ CEnemy::CEnemy(const EType type) : CObjectModel(CObject::LABEL_ENEMY, PRIORITY),
 	m_oldPos	= VEC3_ZERO;	// 過去位置
 	m_movePos	= VEC3_ZERO;	// 位置移動量
 	m_moveRot	= VEC3_ZERO;	// 向き変更量
+	m_AtkPos = VEC3_ZERO;
 	m_state		= STATE_SPAWN;	// 状態
 	m_bJump		= false;		// ジャンプ状況
+	m_bAttack = false;
+	m_bAttackCounter = 0;
 	m_nCounterState	= 0;		// 状態管理カウンター
 
 	// 敵の総数を加算
@@ -144,8 +149,6 @@ void CEnemy::Update(void)
 {
 	// オブジェクトモデルの更新
 	CObjectModel::Update();
-
-	GET_MANAGER->GetDebugProc()->Print(CDebugProc::POINT_LEFT, "敵位置：%f %f %f", GetVec3Position().x, GetVec3Position().y, GetVec3Position().z);
 }
 
 //============================================================
@@ -479,12 +482,16 @@ void CEnemy::UpdateKnock(void)
 	// 重力を与える
 	m_movePos.y -= GRAVITY;
 
+	if (m_movePos.y < 0.0f)
+	{
+		// 通常状態にする
+		m_state = STATE_NORMAL;
+	}
+
 	// 着地判定
 	if (UpdateLanding(&posEnemy))
 	{ // 着地した場合
 
-		// 通常状態にする
-		m_state = STATE_NORMAL;
 	}
 
 	// ステージ範囲外の補正
@@ -568,24 +575,112 @@ void CEnemy::UpdateAction(void)
 	// 重力を与える
 	m_movePos.y -= GRAVITY;
 
+	for (int nCntPri = 0; nCntPri < object::MAX_PRIO; nCntPri++)
+	{ // 優先順位の総数分繰り返す
+		// ポインタを宣言
+		CObject* pObjectTop = CObject::GetTop(nCntPri);	// 先頭オブジェクト
+		if (pObjectTop != NULL)
+		{ // 先頭が存在する場合
+
+			// ポインタを宣言
+			CObject* pObjCheck = pObjectTop;	// オブジェクト確認用
+
+			while (pObjCheck != NULL)
+			{ // オブジェクトが使用されている場合繰り返す
+
+				// ポインタを宣言
+				CObject* pObjectNext = pObjCheck->GetNext();	// 次オブジェクト
+
+				if (pObjCheck->GetLabel() == CObject::LABEL_GROUND)
+				{ // オブジェクトラベルが地盤ではない場合
+
+					D3DXVECTOR3 posBlock = pObjCheck->GetVec3Position();	// 敵位置
+					CGround* pGround = (CGround*)pObjCheck;
+
+					if (collision::Circle2D(GetVec3Position(), posBlock, 50.0f, 50.0f) == true)
+					{
+						pGround->DelColor(0.005f);
+					}
+				}
+
+				// 次のオブジェクトへのポインタを代入
+				pObjCheck = pObjectNext;
+			}
+		}
+	}
+
+	m_AtkPos.x = GetVec3Position().x + sinf(GetVec3Rotation().y) * -100.0f;
+	m_AtkPos.y = 0.0f;
+	m_AtkPos.z = GetVec3Position().z + cosf(GetVec3Rotation().y) * -100.0f;
+
+
+	//CEffect3D::Create(m_AtkPos, 100.0f, CEffect3D::TYPE_NORMAL, 10);
+
 	// 視認対象の攻撃判定
 	if (pPlayer->GetState() != CPlayer::STATE_DEATH)
 	{ // プレイヤーが死んでいない場合
+		if (m_bAttack == false)
+		{
+			if (!collision::Circle2D(posLook, posEnemy, fPlayerRadius, status.fAttackRadius))
+			{ // 敵の攻撃範囲外の場合
 
-		if (!collision::Circle2D(posLook, posEnemy, fPlayerRadius, status.fAttackRadius))
-		{ // 敵の攻撃範囲外の場合
+				// 対象の方向を向かせる
+				UpdateLook(posLook, posEnemy, &rotEnemy);
 
-			// 対象の方向を向かせる
-			UpdateLook(posLook, posEnemy, &rotEnemy);
+				// 対象の方向に移動 (前進)
+				m_movePos.x -= sinf(rotEnemy.y) * status.fForwardMove;
+				m_movePos.z -= cosf(rotEnemy.y) * status.fForwardMove;
+			}
+			else
+			{ // 敵の攻撃範囲内の場合
 
-			// 対象の方向に移動 (前進)
-			m_movePos.x -= sinf(rotEnemy.y) * status.fForwardMove;
-			m_movePos.z -= cosf(rotEnemy.y) * status.fForwardMove;
+				for (int nCntPri = 0; nCntPri < object::MAX_PRIO; nCntPri++)
+				{ // 優先順位の総数分繰り返す
+					// ポインタを宣言
+					CObject* pObjectTop = CObject::GetTop(nCntPri);	// 先頭オブジェクト
+					if (pObjectTop != NULL)
+					{ // 先頭が存在する場合
+
+						// ポインタを宣言
+						CObject* pObjCheck = pObjectTop;	// オブジェクト確認用
+
+						while (pObjCheck != NULL)
+						{ // オブジェクトが使用されている場合繰り返す
+
+							// ポインタを宣言
+							CObject* pObjectNext = pObjCheck->GetNext();	// 次オブジェクト
+
+							if (pObjCheck->GetLabel() == CObject::LABEL_GROUND)
+							{ // オブジェクトラベルが地盤ではない場合
+
+								D3DXVECTOR3 posBlock = pObjCheck->GetVec3Position();	// 敵位置
+								CGround* pGround = (CGround*)pObjCheck;
+
+								if (collision::Circle2D(m_AtkPos, posBlock, 100.0f, 50.0f) == true)
+								{
+									m_bAttack = true;
+									m_bAttackCounter = 120;
+									pGround->DelColor(0.3f);
+								}
+							}
+
+							// 次のオブジェクトへのポインタを代入
+							pObjCheck = pObjectNext;
+						}
+					}
+				}
+			}
 		}
 		else
-		{ // 敵の攻撃範囲内の場合
-
-
+		{
+			if (m_bAttackCounter > 0)
+			{
+				m_bAttackCounter--;
+			}
+			else
+			{
+				m_bAttack = false;
+			}
 		}
 	}
 
@@ -910,6 +1005,8 @@ bool CEnemy::CollisionGround(D3DXVECTOR3& rPos)
 			m_movePos.z += (0.0f - m_movePos.z) * LAND_REV;
 		}
 	}
+
+	SetVec3Position(rPos);
 
 	// 着地状況を返す
 	return bLand;

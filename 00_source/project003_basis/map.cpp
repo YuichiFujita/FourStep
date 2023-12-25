@@ -12,6 +12,7 @@
 #include "manager.h"
 #include "renderer.h"
 #include "texture.h"
+#include "enemy.h"
 
 //************************************************************
 //	É}ÉNÉçíËã`
@@ -34,6 +35,8 @@ CMap::CMap()
 			m_bUseBlock[nCntW][nCntH] = false;
 		}
 	}
+	nCntTime = 0;
+	nSpwnEnemy = 4;
 }
 
 //============================================================
@@ -66,7 +69,27 @@ void CMap::Uninit(void)
 //============================================================
 void CMap::Update(void)
 {
+	if (nCntTime % 300 == 0)
+	{
+		int nCntEnemy = 0;
+		for (int nCntW = 0; nCntW < BLOCK_WIGHT; nCntW++)
+		{
+			for (int nCntH = 0; nCntH < BLOCK_HEIGHT; nCntH++)
+			{
+				if (nCntEnemy < nSpwnEnemy)
+				{
+					int Rand = rand() % 100;
+					if (Rand >= 98)
+					{
+						nCntEnemy++;
+						CEnemy::Create(CEnemy::TYPE_NORMAL, D3DXVECTOR3(-1000.0f + nCntW * 110.0f, 0.0f, -1000.0f + nCntH * 110.0f), VEC3_ZERO);
+					}
+				}
+			}
+		}
+	}
 
+	nCntTime++;
 }
 
 //============================================================
@@ -142,7 +165,7 @@ void CMap::SetGround
 	{
 		for (int nCntH = 0; nCntH < BLOCK_HEIGHT; nCntH++)
 		{
-			CGround *pGround = CGround::Create(D3DXVECTOR3(rPos.x + nCntW * 110.0f, rPos.y, rPos.z + nCntH * 110.0f), rRot, rSize, rTexPartX, rTexPartY, rTexPartZ);
+			CGround *pGround = CGround::Create(D3DXVECTOR3(-1000.0f + nCntW * 110.0f, rPos.y, -1000.0f + nCntH * 110.0f), rRot, rSize, rTexPartX, rTexPartY, rTexPartZ);
 			pGround->SetWNumber(nCntW);
 			pGround->SetHNumber(nCntH);
 			m_bUseBlock[nCntW][nCntH] = true;
