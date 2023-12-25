@@ -49,7 +49,7 @@ public:
 	void Uninit(void) override;		// 終了
 	void Update(void) override;		// 更新
 	void Draw(void) override;		// 描画
-	void Hit(void) override;		// ヒット
+	void HitKnockBack(const int nDmg, const D3DXVECTOR3 &vecKnock);	// ノックバックヒット
 
 	void SetState(const int nState) override;	// 状態設定
 	int GetState(void) const override;			// 状態取得

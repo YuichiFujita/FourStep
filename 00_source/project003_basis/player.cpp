@@ -44,7 +44,7 @@ namespace
 //************************************************************
 const char *CPlayer::mc_apModelFile[] =	// モデル定数
 {
-	"data\\MODEL\\PLAYER\\escapekun.x",	// プレイヤー
+	"data\\MODEL\\PLAYER\\1225_pl.x",	// プレイヤー
 };
 
 //************************************************************
@@ -156,9 +156,9 @@ void CPlayer::Draw(void)
 }
 
 //============================================================
-//	ヒット処理
+//	ノックバックヒット処理
 //============================================================
-void CPlayer::Hit(void)
+void CPlayer::HitKnockBack(const int nDmg, const D3DXVECTOR3 &vecKnock)
 {
 	// 変数を宣言
 	D3DXVECTOR3 posPlayer = GetVec3Position();	// プレイヤー位置
